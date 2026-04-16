@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fortico Rewind • Administration</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-page">
+  <div class="cyber-loader"><div class="loader-content"><div class="electric-spinner"></div><p>CHARGEMENT SYSTÈME</p></div></div>
+
+  <nav class="cyber-nav admin-nav hidden">
+    <div class="nav-container">
+      <div class="nav-brand"><i class="fas fa-shield-halved"></i><span>FORTICO<span>//ADMIN</span></span></div>
+      <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#" id="navAdminDashboard" class="active"><i class="fas fa-chart-pie"></i>TABLEAU DE BORD</a></li>
+        <li><a href="#" id="navAdminUsers"><i class="fas fa-users"></i>UTILISATEURS</a></li>
+        <li><a href="#" id="navAdminMotors"><i class="fas fa-microchip"></i>MOTEURS</a></li>
+        <li><a href="#" id="navAdminMotorTypes"><i class="fas fa-cubes"></i>TYPES MOTEURS</a></li>
+        <li><a href="#" id="navAdminProfile"><i class="fas fa-user-shield"></i>PROFIL ADMIN</a></li>
+        <li><a href="#" id="adminLogoutBtn"><i class="fas fa-power-off"></i>DÉCONNEXION</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <!-- Login -->
+    <div id="adminLoginView" class="auth-wrapper active">
+      <div class="auth-card">
+        <div class="auth-header"><div class="auth-icon"><i class="fas fa-shield-halved"></i></div><h2>ADMINISTRATION</h2><p>Accès restreint</p></div>
+        <form id="adminLoginForm" class="auth-form active">
+          <div class="input-group"><i class="fas fa-user-shield"></i><input type="text" id="adminUsername" placeholder="IDENTIFIANT" value="admin@fortico.com" required></div>
+          <div class="input-group"><i class="fas fa-key"></i><input type="password" id="adminPassword" placeholder="MOT DE PASSE" value="admin123" required></div>
+          <button type="submit" class="cyber-button"><span>AUTHENTIFICATION</span><i class="fas fa-arrow-right"></i></button>
+          <p class="form-note">admin@fortico.com / admin123</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="adminDashboardView" class="dashboard-wrapper">
+      <div class="dashboard-header"><div class="welcome-section"><h2>SUPERVISION</h2><p>Vue d'ensemble du système</p></div><button class="cyber-button" id="refreshDashboardBtn"><i class="fas fa-sync-alt"></i><span>ACTUALISER</span></button></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="totalUsers">0</div><div class="stat-label">Utilisateurs</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-microchip"></i></div><div class="stat-value" id="adminTotalMotors">0</div><div class="stat-label">Moteurs</div></div>
+        <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="adminPendingValidations">0</div><div class="stat-label">Validations en attente</div></div>
+        <div class="stat-card success"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="adminCompleted">0</div><div class="stat-label">Terminés</div></div>
+      </div>
+      <div class="dashboard-grid-2">
+        <div class="dashboard-card"><div class="card-header"><h3><i class="fas fa-clock"></i> VALIDATIONS EN ATTENTE</h3></div><div id="pendingValidationsList" class="list-container"></div></div>
+        <div class="dashboard-card"><div class="card-header"><h3><i class="fas fa-history"></i> ACTIVITÉ RÉCENTE</h3></div><div id="recentActivity" class="list-container"></div></div>
+      </div>
+    </div>
+
+    <!-- Gestion Utilisateurs -->
+    <div id="usersManagementView" class="management-wrapper">
+      <div class="management-header"><h2><i class="fas fa-users-cog"></i> GESTION UTILISATEURS</h2><button class="cyber-button" id="refreshUsersList"><i class="fas fa-sync-alt"></i><span>ACTUALISER</span></button></div>
+      <div id="usersList" class="table-container"></div>
+    </div>
+
+    <!-- Gestion Moteurs -->
+    <div id="motorsManagementView" class="management-wrapper">
+      <div class="management-header"><h2><i class="fas fa-microchip"></i> GESTION MOTEURS</h2><select id="motorFilterStatus" class="cyber-select"><option value="all">Tous</option><option value="pending">En attente</option><option value="in_progress">En cours</option><option value="completed">Terminés</option></select></div>
+      <div id="allMotorsList" class="table-container"></div>
+    </div>
+
+    <!-- Gestion Types Moteurs -->
+    <div id="motorTypesManagementView" class="management-wrapper">
+      <div class="management-header"><h2><i class="fas fa-cubes"></i> TYPES DE MOTEURS</h2><button class="cyber-button" id="addMotorTypeBtn"><i class="fas fa-plus"></i><span>NOUVEAU TYPE</span></button></div>
+      <div id="motorTypesList" class="table-container"></div>
+    </div>
+
+    <!-- Vue Détail Moteur Admin -->
+    <div id="adminMotorDetailView" class="detail-wrapper">
+      <div class="detail-header">
+        <button class="back-btn" id="backFromAdminDetailBtn"><i class="fas fa-arrow-left"></i><span>RETOUR</span></button>
+        <h2 id="adminMotorDetailTitle">DÉTAIL MOTEUR</h2>
+      </div>
+      <div id="adminMotorDetailContent" class="detail-content"></div>
+    </div>
+
+    <!-- Profil Admin -->
+    <div id="adminProfileView" class="profile-wrapper">
+      <div class="profile-header"><h2><i class="fas fa-user-shield"></i> PROFIL ADMINISTRATEUR</h2></div>
+      <div class="profile-card">
+        <div class="profile-avatar admin-avatar"><i class="fas fa-crown"></i></div>
+        <form id="adminProfileForm" class="profile-form">
+          <div class="form-section"><h3>INFORMATIONS</h3><div class="form-row"><div class="form-field"><label>NOM</label><input type="text" id="adminProfileName" value="Administrateur" required></div></div></div>
+          <div class="form-section"><h3>IDENTIFIANTS</h3><div class="form-row"><div class="form-field"><label>EMAIL</label><input type="email" id="adminProfileEmail" required></div></div></div>
+          <div class="form-section"><h3>CHANGER MOT DE PASSE</h3><div class="form-row"><div class="form-field"><label>ACTUEL</label><input type="password" id="adminCurrentPassword"></div></div><div class="form-row"><div class="form-field"><label>NOUVEAU</label><input type="password" id="adminNewPassword"></div><div class="form-field"><label>CONFIRMER</label><input type="password" id="adminConfirmNewPassword"></div></div><p class="form-hint">Laissez vide pour ne pas changer</p></div>
+          <div class="form-actions"><button type="button" class="cyber-button secondary" id="cancelAdminProfileBtn">ANNULER</button><button type="submit" class="cyber-button"><span>ENREGISTRER</span><i class="fas fa-save"></i></button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification-container"></div>
+  <div id="popup-container"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => { initializeStorage(); initializeDefaultMotorTypes(); initAdminPage(); });</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fortico Rewind • Espace Technique</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="user-page">
+  <div class="cyber-loader">
+    <div class="loader-content">
+      <div class="electric-spinner"></div>
+      <p>CHARGEMENT...</p>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="cyber-nav hidden">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <i class="fas fa-bolt"></i>
+        <span>FORTICO REWID <span>USER </span></span>
+      </div>
+      
+      <button class="nav-toggle" id="navToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+  
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#" id="navDashboard" class="active"><i class="fas fa-chart-line"></i>TABLEAU DE BORD</a></li>
+        <li><a href="#" id="navNewMotor"><i class="fas fa-plus-circle"></i>NOUVEAU MOTEUR</a></li>
+        <li><a href="#" id="navProfile"><i class="fas fa-user-gear"></i>MON PROFIL</a></li>
+        <li><a href="#" id="logoutBtn"><i class="fas fa-power-off"></i>DÉCONNEXION</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <!-- Vue Login/Register -->
+    <div id="authView" class="auth-wrapper active">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-icon"><i class="fas fa-microchip"></i></div>
+          <h2>ACCÈS TECHNICIEN</h2>
+        </div>
+        
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">CONNEXION</button>
+          <button class="auth-tab" data-tab="register">INSCRIPTION</button>
+        </div>
+
+        <form id="loginForm" class="auth-form active">
+          <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="EMAIL" required></div>
+          <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="MOT DE PASSE" required></div>
+          <button type="submit" class="cyber-button"><span>AUTHENTIFICATION</span><i class="fas fa-arrow-right"></i></button>
+        </form>
+
+        <form id="registerForm" class="auth-form">
+          <div class="input-group"><i class="fas fa-user"></i><input type="text" id="registerName" placeholder="NOM COMPLET" required></div>
+          <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="registerEmail" placeholder="EMAIL" required></div>
+          <div class="input-group"><i class="fas fa-building"></i><input type="text" id="registerCompany" placeholder="ENTREPRISE"></div>
+          <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="registerPassword" placeholder="MOT DE PASSE" required></div>
+          <button type="submit" class="cyber-button"><span>CRÉER COMPTE</span><i class="fas fa-user-plus"></i></button>
+          <p class="form-note">Validation administrateur requise</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Vue Dashboard -->
+    <div id="dashboardView" class="dashboard-wrapper">
+      <div class="dashboard-header">
+        <div class="welcome-section">
+          <h2>TABLEAU DE BORD</h2>
+          <p>Bienvenue, <span id="userNameDisplay">Technicien</span></p>
+        </div>
+        <button class="cyber-button" id="quickNewMotor"><i class="fas fa-plus"></i><span>NOUVEAU MOTEUR</span></button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-microchip"></i></div><div class="stat-value" id="totalMotors">0</div><div class="stat-label">Moteurs</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-play-circle"></i></div><div class="stat-value" id="inProgressMotors">0</div><div class="stat-label">En cours</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="completedMotors">0</div><div class="stat-label">Terminés</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value" id="pendingMotors">0</div><div class="stat-label">En attente</div></div>
+      </div>
+
+      <div class="motors-section">
+        <div class="section-header"><h3><i class="fas fa-list"></i> MOTEURS ENREGISTRÉS</h3></div>
+        <div id="motorsList" class="motors-list"></div>
+      </div>
+    </div>
+
+    <!-- Vue Détail Moteur (SUIVI ÉTAPES) -->
+    <div id="motorDetailView" class="detail-wrapper">
+      <div class="detail-header">
+        <button class="back-btn" id="backFromDetailBtn"><i class="fas fa-arrow-left"></i><span>RETOUR</span></button>
+        <h2 id="motorDetailTitle">SUIVI MOTEUR</h2>
+      </div>
+      <div id="motorDetailContent" class="detail-content"></div>
+    </div>
+
+    <!-- Vue Profil Utilisateur -->
+    <div id="profileView" class="profile-wrapper">
+      <div class="profile-header"><h2><i class="fas fa-user-gear"></i> MON PROFIL</h2><p>Gérez vos informations personnelles</p></div>
+      <div class="profile-card">
+        <div class="profile-avatar"><i class="fas fa-user-astronaut"></i></div>
+        <form id="userProfileForm" class="profile-form">
+          <div class="form-section"><h3>INFORMATIONS PERSONNELLES</h3><div class="form-row"><div class="form-field"><label>NOM COMPLET</label><input type="text" id="profileName" required></div><div class="form-field"><label>ENTREPRISE</label><input type="text" id="profileCompany"></div></div></div>
+          <div class="form-section"><h3>IDENTIFIANTS</h3><div class="form-row"><div class="form-field"><label>EMAIL</label><input type="email" id="profileEmail" required></div></div></div>
+          <div class="form-section"><h3>CHANGER MOT DE PASSE</h3><div class="form-row"><div class="form-field"><label>ACTUEL</label><input type="password" id="currentPassword"></div></div><div class="form-row"><div class="form-field"><label>NOUVEAU</label><input type="password" id="newPassword"></div><div class="form-field"><label>CONFIRMER</label><input type="password" id="confirmNewPassword"></div></div><p class="form-hint">Laissez vide pour ne pas changer</p></div>
+          <div class="form-actions"><button type="button" class="cyber-button secondary" id="cancelProfileBtn">ANNULER</button><button type="submit" class="cyber-button"><span>ENREGISTRER</span><i class="fas fa-save"></i></button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Vue Formulaire Moteur -->
+    <div id="motorFormView" class="form-wrapper">
+      <div class="form-header">
+        <button class="back-btn" id="backToDashboardBtn"><i class="fas fa-arrow-left"></i><span>RETOUR</span></button>
+        <h2>NOUVEAU MOTEUR</h2>
+      </div>
+      <form id="motorForm" class="motor-form">
+        <div class="form-section"><h3><i class="fas fa-cube"></i> TYPE DE MOTEUR</h3>
+          <div class="form-row">
+            <div class="form-field"><label>MODÈLE PRÉDÉFINI</label><select id="motorTemplate"><option value="">-- Personnalisé --</option></select></div>
+            <div class="form-field"><label>TYPE</label><select id="motorType" required><option value="">Sélectionner</option><option value="three_phase">Triphasé</option><option value="single_phase">Monophasé</option></select></div>
+          </div>
+        </div>
+        <div class="form-section"><h3><i class="fas fa-user"></i> CLIENT</h3>
+          <div class="form-row"><div class="form-field"><label>NOM</label><input type="text" id="clientName" required></div><div class="form-field"><label>TÉLÉPHONE</label><input type="tel" id="clientPhone"></div></div>
+          <div class="form-row"><div class="form-field"><label>ENTREPRISE</label><input type="text" id="clientCompany"></div><div class="form-field"><label>ADRESSE</label><input type="text" id="clientAddress"></div></div>
+          <div class="form-field full-width"><label>DESCRIPTION PANNE</label><textarea id="faultDescription" rows="3"></textarea></div>
+        </div>
+        <div class="form-section"><h3><i class="fas fa-id-card"></i> PLAQUE SIGNALÉTIQUE</h3>
+          <div class="form-grid-3">
+            <div class="form-field"><label>PUISSANCE (kW)</label><input type="number" step="0.01" id="power"></div>
+            <div class="form-field"><label>TENSION (V)</label><input type="number" id="voltage"></div>
+            <div class="form-field"><label>COURANT (A)</label><input type="number" step="0.1" id="current"></div>
+            <div class="form-field"><label>FRÉQUENCE (Hz)</label><input type="number" id="frequency"></div>
+            <div class="form-field"><label>VITESSE (RPM)</label><input type="number" id="rpm"></div>
+            <div class="form-field"><label>COS φ</label><input type="number" step="0.01" id="powerFactor"></div>
+            <div class="form-field"><label>CLASSE ISOLATION</label><select id="insulationClass"><option value="">Sélectionner</option><option>A</option><option>B</option><option>F</option><option>H</option></select></div>
+            <div class="form-field"><label>COUPLAGE</label><select id="couplingType"><option value="">Sélectionner</option><option value="star">Étoile</option><option value="delta">Triangle</option></select></div>
+            <div class="form-field"><label>NOMBRE POLES</label><input type="number" id="poles"></div>
+          </div>
+        </div>
+        <div class="form-actions"><button type="button" class="cyber-button secondary" id="cancelMotorBtn">ANNULER</button><button type="submit" class="cyber-button"><span>ENREGISTRER</span><i class="fas fa-save"></i></button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="notification-container"></div>
+  <div id="popup-container"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => { initializeStorage(); initializeDefaultMotorTypes(); initUserPage(); });</script>
+</body>
+</html>
