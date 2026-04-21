@@ -573,6 +573,11 @@ function initAdminPage() {
         window.location.reload())
       : showNotification(r.message, "error");
   });
+  document.getElementById("navAdminCompleted")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setActiveNav("navAdminCompleted");
+    showAdminView("completed");
+  });
   document.getElementById("adminLogoutBtn")?.addEventListener("click", (e) => {
     e.preventDefault();
     logout();
@@ -648,8 +653,10 @@ function showAdminView(view) {
     "adminMotorDetailView",
     "usersManagementView",
     "motorsManagementView",
+    "completedMotorsView",
     "motorTypesManagementView",
   ].forEach((v) => document.getElementById(v)?.classList.remove("active"));
+  
   if (view === "dashboard") {
     document.getElementById("adminDashboardView")?.classList.add("active");
     loadAdminStats();
@@ -659,10 +666,11 @@ function showAdminView(view) {
   } else if (view === "motors") {
     document.getElementById("motorsManagementView")?.classList.add("active");
     loadAllMotors();
+  } else if (view === "completed") {
+    document.getElementById("completedMotorsView")?.classList.add("active");
+    loadCompletedMotors();
   } else if (view === "motorTypes") {
-    document
-      .getElementById("motorTypesManagementView")
-      ?.classList.add("active");
+    document.getElementById("motorTypesManagementView")?.classList.add("active");
     loadMotorTypesList();
   } else if (view === "profile") {
     document.getElementById("adminProfileView")?.classList.add("active");
@@ -671,6 +679,412 @@ function showAdminView(view) {
     document.getElementById("adminMotorDetailView")?.classList.add("active");
   }
 }
+function loadCompletedMotors() {
+  const motors = getMotors().filter(m => m.status === 'completed');
+  const tbody = document.getElementById('completedMotorsList');
+  
+  // Calculer les stats
+  document.getElementById('totalCompletedMotors').textContent = motors.length;
+  
+  const now = new Date();
+  const thisMonth = motors.filter(m => {
+    const d = new Date(m.updatedAt || m.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  document.getElementById('completedThisMonth').textContent = thisMonth.length;
+  
+  // Calculer la durée moyenne
+  let totalDays = 0;
+  motors.forEach(m => {
+    if (m.createdAt && (m.updatedAt || m.completedAt)) {
+      const start = new Date(m.createdAt);
+      const end = new Date(m.updatedAt || m.completedAt);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      totalDays += days;
+    }
+  });
+  const avgDays = motors.length > 0 ? Math.round(totalDays / motors.length) : 0;
+  document.getElementById('avgCompletionTime').textContent = avgDays;
+  
+  if (!motors.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;">Aucun moteur terminé</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = motors.map(m => {
+    const startDate = new Date(m.createdAt);
+    const endDate = new Date(m.updatedAt || m.completedAt);
+    const durationDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    
+    return `
+      <tr>
+        <td><strong>${m.clientName || '-'}</strong><br><small>${m.clientCompany || ''}</small></td>
+        <td>${m.technicianName || '-'}<br><small>${m.technicianEmail || ''}</small></td>
+        <td>${m.motorType === 'three_phase' ? 'Triphasé' : 'Monophasé'}</td>
+        <td>${m.power || '-'} kW</td>
+        <td>${startDate.toLocaleDateString('fr-FR')}</td>
+        <td>${endDate.toLocaleDateString('fr-FR')}</td>
+        <td><span class="badge success">${durationDays} jours</span></td>
+        <td>
+          <button class="action-btn view-completed" data-id="${m.id}" title="Voir détails">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="action-btn print-motor" data-id="${m.id}" title="Imprimer fiche">
+            <i class="fas fa-print"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Événements
+  tbody.querySelectorAll('.view-completed').forEach(btn => {
+    btn.addEventListener('click', () => viewAdminMotorDetail(btn.dataset.id));
+  });
+  
+  tbody.querySelectorAll('.print-motor').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const motor = getMotorById(btn.dataset.id);
+      if (motor) {
+        printMotorPDF(motor);
+      }
+    });
+  });
+}
+// Fonction pour imprimer un seul moteur en PDF
+function printMotorPDF(motor) {
+  const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+  
+  if (!jsPDF) {
+    showNotification('Module PDF non disponible', 'error');
+    return;
+  }
+  
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const usableWidth = pageWidth - (2 * margin);
+  
+  let yPos = 25;
+  
+  // En-tête
+  doc.setFontSize(22);
+  doc.setTextColor(37, 99, 235);
+  doc.text('FORTICO REWIND', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 12;
+  
+  doc.setFontSize(14);
+  doc.setTextColor(30, 41, 59);
+  doc.text('FICHE TECHNIQUE MOTEUR', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 8;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 12;
+  
+  // Ligne de séparation
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 15;
+  
+  // Informations client
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235);
+  doc.text('INFORMATIONS CLIENT', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Client : ${motor.clientName || '-'}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Téléphone : ${motor.clientPhone || '-'}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Entreprise : ${motor.clientCompany || '-'}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Adresse : ${motor.clientAddress || '-'}`, margin, yPos);
+  yPos += 7;
+  // Description panne
+  doc.text(`Panne décrite :`, margin, yPos);
+  yPos += 6;
+  const faultLines = doc.splitTextToSize(motor.faultDescription || 'Aucune description', usableWidth - 10);
+  doc.text(faultLines, margin + 5, yPos);
+  yPos += (faultLines.length * 5) + 10;
+  
+  // Informations technicien
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235);
+  doc.text('TECHNICIEN RESPONSABLE', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Nom : ${motor.technicianName || '-'}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Email : ${motor.technicianEmail || '-'}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Entreprise : ${motor.technicianCompany || '-'}`, margin, yPos);
+  yPos += 15;
+  
+  // Ligne de séparation
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 12;
+  
+  // Caractéristiques moteur
+  doc.setFontSize(12);
+  doc.setTextColor(37, 99, 235);
+  doc.text('CARACTÉRISTIQUES MOTEUR', margin, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59);
+  
+  const specs = [
+    `Type : ${motor.motorType === 'three_phase' ? 'Triphasé' : 'Monophasé'}`,
+    `Puissance : ${motor.power || '-'} kW`,
+    `Tension : ${motor.voltage || '-'} V`,
+    `Courant : ${motor.current || '-'} A`,
+    `Fréquence : ${motor.frequency || '-'} Hz`,
+    `Vitesse : ${motor.rpm || '-'} RPM`,
+    `Cos φ : ${motor.powerFactor || '-'}`,
+    `Classe isolation : ${motor.insulationClass || '-'}`,
+    `Couplage : ${motor.couplingType === 'star' ? 'Étoile' : motor.couplingType === 'delta' ? 'Triangle' : '-'}`,
+    `Nombre de pôles : ${motor.poles || '-'}`
+  ];
+  
+  // Afficher en deux colonnes
+  const colWidth = usableWidth / 2;
+  specs.forEach((spec, index) => {
+    const col = index % 2;
+    const row = Math.floor(index / 2);
+    const xPos = margin + (col * colWidth);
+    const lineY = yPos + (row * 7);
+    
+    if (lineY > pageHeight - 30) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(spec, xPos, yPos + (row * 7));
+  });
+  
+  yPos += Math.ceil(specs.length / 2) * 7 + 15;
+  
+  // Dates
+  if (yPos > pageHeight - 40) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  const startDate = motor.createdAt ? new Date(motor.createdAt).toLocaleDateString('fr-FR') : '-';
+  const endDate = (motor.updatedAt || motor.completedAt) ? new Date(motor.updatedAt || motor.completedAt).toLocaleDateString('fr-FR') : '-';
+  let durationDays = '-';
+  if (motor.createdAt && (motor.updatedAt || motor.completedAt)) {
+    durationDays = Math.ceil((new Date(motor.updatedAt || motor.completedAt) - new Date(motor.createdAt)) / (1000 * 60 * 60 * 24));
+  }
+  
+  doc.text(`Date de création : ${startDate}`, margin, yPos);
+  doc.text(`Date de fin : ${endDate}`, margin + 100, yPos);
+  yPos += 8;
+  doc.text(`Durée totale : ${durationDays} ${typeof durationDays === 'number' ? 'jours' : ''}`, margin, yPos);
+  
+  // Pied de page
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Page ${i} / ${pageCount} - Fortico Rewind - Document confidentiel`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+  
+  doc.save(`fiche_moteur_${motor.clientName || motor.id}.pdf`);
+  showNotification(`Fiche PDF générée pour ${motor.clientName}`, 'success');
+}
+
+// Exporter en PDF (format liste)
+// Exporter en PDF (format liste)
+document.getElementById('exportCompletedBtn')?.addEventListener('click', async () => {
+  const motors = getMotors().filter(m => m.status === 'completed');
+  if (motors.length === 0) {
+    showNotification('Aucun moteur terminé à exporter', 'warning');
+    return;
+  }
+  
+  // Vérifier si jsPDF est chargé
+  if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+    showNotification('Chargement du module PDF en cours...', 'info');
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(script);
+    await new Promise(resolve => script.onload = resolve);
+  }
+  
+  const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+  
+  if (!jsPDF) {
+    showNotification('Erreur de chargement du module PDF', 'error');
+    return;
+  }
+  
+  // Format A4 portrait
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  
+  let yPos = 25;
+  
+  // En-tête
+  doc.setFontSize(22);
+  doc.setTextColor(37, 99, 235);
+  doc.text('FORTICO REWIND', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 12;
+  
+  doc.setFontSize(14);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Rapport des moteurs terminés', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 8;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 15;
+  
+  // Statistiques (sans encadré)
+  const now = new Date();
+  const thisMonth = motors.filter(m => {
+    const d = new Date(m.updatedAt || m.completedAt || m.createdAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  
+  let totalDays = 0;
+  let motorsWithDuration = 0;
+  motors.forEach(m => {
+    if (m.createdAt && (m.updatedAt || m.completedAt)) {
+      const start = new Date(m.createdAt);
+      const end = new Date(m.updatedAt || m.completedAt);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      totalDays += days;
+      motorsWithDuration++;
+    }
+  });
+  const avgDays = motorsWithDuration > 0 ? Math.round(totalDays / motorsWithDuration) : 0;
+  
+  doc.setFontSize(11);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Total terminés : ${motors.length}    |    Ce mois : ${thisMonth.length}    |    Durée moyenne : ${avgDays} jours`, margin, yPos);
+  yPos += 15;
+  
+  // Ligne de séparation
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 12;
+  
+  // Parcourir chaque moteur
+  motors.forEach((motor, index) => {
+    // Vérifier si on doit ajouter une page
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      yPos = 25;
+      
+      // Rappel en-tête sur nouvelle page
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text('FORTICO REWIND - Rapport moteurs terminés (suite)', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+    }
+    
+    const startDate = motor.createdAt ? new Date(motor.createdAt).toLocaleDateString('fr-FR') : '-';
+    const endDate = (motor.updatedAt || motor.completedAt) ? new Date(motor.updatedAt || motor.completedAt).toLocaleDateString('fr-FR') : '-';
+    let durationDays = '-';
+    if (motor.createdAt && (motor.updatedAt || motor.completedAt)) {
+      durationDays = Math.ceil((new Date(motor.updatedAt || motor.completedAt) - new Date(motor.createdAt)) / (1000 * 60 * 60 * 24));
+    }
+    
+    // Titre avec numéro
+    doc.setFontSize(12);
+    doc.setTextColor(37, 99, 235);
+    doc.text(`${index + 1}. ${motor.clientName || 'Client inconnu'}`, margin, yPos);
+    
+    // Badge durée
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(16, 185, 129);
+    const durationText = typeof durationDays === 'number' ? `${durationDays} jours` : '-';
+    const badgeWidth = doc.getTextWidth(durationText) + 10;
+    doc.roundedRect(pageWidth - margin - badgeWidth, yPos - 5, badgeWidth, 7, 3, 3, 'F');
+    doc.text(durationText, pageWidth - margin - badgeWidth/2, yPos, { align: 'center' });
+    
+    yPos += 10;
+    
+    // Détails
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    
+    const details = [
+      `Client : ${motor.clientName || '-'}`,
+      `Entreprise : ${motor.clientCompany || '-'}`,
+      `Téléphone : ${motor.clientPhone || '-'}`,
+      `Adresse : ${motor.clientAddress || '-'}`,
+      `Technicien : ${motor.technicianName || '-'} (${motor.technicianEmail || '-'})`,
+      `Type : ${motor.motorType === 'three_phase' ? 'Triphasé' : 'Monophasé'} | Puissance : ${motor.power || '-'} kW | Tension : ${motor.voltage || '-'} V`,
+      `Créé le : ${startDate} | Terminé le : ${endDate}`
+    ];
+    
+    details.forEach(line => {
+      doc.text(line, margin + 5, yPos);
+      yPos += 7;
+    });
+    
+    // Panne décrite (avec retour à la ligne)
+    if (motor.faultDescription) {
+      doc.text(`Panne décrite :`, margin + 5, yPos);
+      yPos += 6;
+      
+      const faultLines = doc.splitTextToSize(motor.faultDescription, pageWidth - (2 * margin) - 10);
+      faultLines.forEach(line => {
+        doc.text(line, margin + 10, yPos);  
+        yPos += 5;
+      });
+    } else {
+      doc.text(`Panne décrite : -`, margin + 5, yPos);
+      yPos += 7;
+    }
+    
+    // Ligne de séparation
+    yPos += 5;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 12;
+  });
+  
+  // Pied de page
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Page ${i} / ${pageCount} - Fortico Rewind - Rapport confidentiel`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+  
+  // Sauvegarder le PDF
+  doc.save(`moteurs_termines_${new Date().toISOString().split('T')[0]}.pdf`);
+  showNotification('PDF généré avec succès', 'success');
+});
 
 function loadAdminStats() {
   const users = getUsers().filter((u) => u.role === "user"),
@@ -684,6 +1098,30 @@ function loadAdminStats() {
   document.getElementById("adminCompleted").textContent = motors.filter(
     (m) => m.status === "completed"
   ).length;
+
+  // Rendre les stat-cards cliquables
+  document.querySelectorAll('.stat-card').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function() {
+      const label = this.querySelector('.stat-label')?.textContent;
+      
+      if (label === 'Utilisateurs') {
+        setActiveNav('navAdminUsers');
+        showAdminView('users');
+      } else if (label === 'Moteurs totaux') {
+        setActiveNav('navAdminMotors');
+        showAdminView('motors');
+      } else if (label === 'Validations en attente') {
+        setActiveNav('navAdminMotors');
+        showAdminView('motors');
+        document.getElementById('motorFilterStatus').value = 'pending';
+        loadAllMotors();
+      } else if (label === 'Terminés') {
+        setActiveNav('navAdminCompleted');
+        showAdminView('completed');
+      }
+    });
+  });
 
   const p = document.getElementById("pendingValidationsList");
   if (p) {
@@ -703,15 +1141,18 @@ function loadAdminStats() {
               }"><i class="fas fa-eye"></i></button></div>`
           )
           .join("")
-      : '<p style="padding:20px;">Aucune validation</p>';
+      : '<p style="padding:20px;">Aucune validation en attente</p>';
     p.querySelectorAll(".action-btn").forEach((b) =>
-      b.addEventListener("click", () => viewAdminMotorDetail(b.dataset.id))
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewAdminMotorDetail(b.dataset.id);
+      })
     );
   }
 
   const a = document.getElementById("recentActivity");
   if (a) {
-    const acts = getActivities(5);
+    const acts = getActivities(10);
     a.innerHTML = acts.length
       ? acts
           .map(
@@ -723,7 +1164,7 @@ function loadAdminStats() {
               ).toLocaleTimeString()}</small></div>`
           )
           .join("")
-      : "<p>Aucune activité</p>";
+      : "<p style='padding:20px;'>Aucune activité</p>";
   }
 }
 

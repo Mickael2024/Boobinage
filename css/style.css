@@ -1367,3 +1367,36 @@ body {
 .user-info-banner strong {
   font-weight: 600;
 }
+/* Stat cards cliquables */
+.stat-card {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+}
+
+/* Section moteurs terminés */
+.completed-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.badge.success {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .completed-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
