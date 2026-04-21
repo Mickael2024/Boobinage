@@ -243,12 +243,20 @@ function showUserView(view) {
   ["dashboardView", "motorFormView", "motorDetailView", "profileView"].forEach(
     (v) => document.getElementById(v)?.classList.remove("active")
   );
+  
   if (view === "dashboard") {
     document.getElementById("dashboardView")?.classList.add("active");
     loadUserDashboard();
   } else if (view === "newMotor") {
     document.getElementById("motorFormView")?.classList.add("active");
     document.getElementById("motorForm").reset();
+    
+    // Afficher les informations du technicien connecté
+    const user = getCurrentUser();
+    if (user) {
+      document.getElementById("technicianName").textContent = user.name;
+      document.getElementById("technicianEmail").textContent = user.email;
+    }
   } else if (view === "motorDetail") {
     document.getElementById("motorDetailView")?.classList.add("active");
   } else if (view === "profile") {
@@ -256,7 +264,6 @@ function showUserView(view) {
     loadUserProfile();
   }
 }
-
 function loadUserDashboard() {
   const user = getCurrentUser();
   if (!user) return;
@@ -309,22 +316,26 @@ function renderMotorsList(motors) {
 }
 
 window.viewMotorDetail = function(motorId) {
-    const motor = getMotorById(motorId); 
-    if(!motor) return showNotification('Moteur non trouvé','error');
-    
-    showUserView('motorDetail');
-    document.getElementById('motorDetailTitle').textContent = `SUIVI - ${motor.clientName||'Sans nom'}`;
-    const content = document.getElementById('motorDetailContent'); 
-    if(!content) return;
-    
-    let html = `
-      <div class="motor-info-card">
-        <p><strong>Client:</strong> ${motor.clientName||'-'} | <strong>Tél:</strong> ${motor.clientPhone||'-'}</p>
-        <p><strong>Type:</strong> ${motor.motorType==='three_phase'?'Triphasé':'Monophasé'} | <strong>Puissance:</strong> ${motor.power||'-'} kW</p>
-        <p><strong>Statut:</strong> <span class="motor-status status-${motor.status}">${getStatusLabel(motor.status)}</span></p>
-      </div>
-      <div class="steps-container">
-    `;
+  const motor = getMotorById(motorId); 
+  if(!motor) return showNotification('Moteur non trouvé','error');
+  
+  showUserView('motorDetail');
+  document.getElementById('motorDetailTitle').textContent = `SUIVI - ${motor.clientName||'Sans nom'}`;
+  const content = document.getElementById('motorDetailContent'); 
+  if(!content) return;
+  
+  let html = `
+    <div class="motor-info-card">
+      <p><strong>Client:</strong> ${motor.clientName||'-'} | <strong>Tél:</strong> ${motor.clientPhone||'-'}</p>
+      <p><strong>Entreprise client:</strong> ${motor.clientCompany||'-'} | <strong>Adresse:</strong> ${motor.clientAddress||'-'}</p>
+      <p><strong>Technicien responsable:</strong> ${motor.technicianName||'-'} (${motor.technicianEmail||'-'})</p>
+      <p><strong>Type:</strong> ${motor.motorType==='three_phase'?'Triphasé':'Monophasé'} | <strong>Puissance:</strong> ${motor.power||'-'} kW</p>
+      <p><strong>Statut:</strong> <span class="motor-status status-${motor.status}">${getStatusLabel(motor.status)}</span></p>
+      <p><strong>Panne décrite:</strong> ${motor.faultDescription||'-'}</p>
+      <p><strong>Date création:</strong> ${formatDate(motor.createdAt)}</p>
+    </div>
+    <div class="steps-container">
+  `;
     
     motor.steps.forEach((step, stepIndex) => {
       const stepValidated = step.validated;
@@ -457,15 +468,25 @@ function applyMotorTemplate() {
 function saveMotorData() {
   const user = getCurrentUser();
   if (!user) return;
+  
   const templateId = document.getElementById("motorTemplate")?.value;
   const motor = {
     userId: user.id,
     templateId: templateId || null,
+    
+    // Informations du technicien
+    technicianName: user.name,
+    technicianEmail: user.email,
+    technicianCompany: user.company || '',
+    
+    // Informations client
     clientName: document.getElementById("clientName")?.value,
     clientPhone: document.getElementById("clientPhone")?.value,
     clientCompany: document.getElementById("clientCompany")?.value,
     clientAddress: document.getElementById("clientAddress")?.value,
     faultDescription: document.getElementById("faultDescription")?.value,
+    
+    // Caractéristiques moteur
     motorType: document.getElementById("motorType")?.value,
     power: document.getElementById("power")?.value,
     voltage: document.getElementById("voltage")?.value,
@@ -477,8 +498,10 @@ function saveMotorData() {
     couplingType: document.getElementById("couplingType")?.value,
     poles: document.getElementById("poles")?.value,
   };
+  
   if (!motor.clientName || !motor.motorType)
     return showNotification("Client et type requis", "error");
+    
   saveMotor(motor);
   showNotification("Moteur enregistré", "success");
   setActiveNav("navDashboard");
@@ -784,23 +807,26 @@ function loadAllMotors() {
 }
 
 window.viewAdminMotorDetail = function(motorId) {
-    const motor = getMotorById(motorId); 
-    if(!motor) return showNotification('Moteur non trouvé','error');
-    
-    showAdminView('motorDetail');
-    document.getElementById('adminMotorDetailTitle').textContent = `DÉTAIL - ${motor.clientName||'Sans nom'}`;
-    const content = document.getElementById('adminMotorDetailContent'); 
-    if(!content) return;
-    
-    let html = `
-      <div class="motor-info-card">
-        <p><strong>Client:</strong> ${motor.clientName||'-'} | <strong>Tél:</strong> ${motor.clientPhone||'-'}</p>
-        <p><strong>Type:</strong> ${motor.motorType==='three_phase'?'Triphasé':'Monophasé'} | <strong>Puissance:</strong> ${motor.power||'-'} kW</p>
-        <p><strong>Statut:</strong> <span class="motor-status status-${motor.status}">${getStatusLabel(motor.status)}</span></p>
-      </div>
-      <div class="steps-container">
-    `;
-    
+  const motor = getMotorById(motorId); 
+  if(!motor) return showNotification('Moteur non trouvé','error');
+  
+  showAdminView('motorDetail');
+  document.getElementById('adminMotorDetailTitle').textContent = `DÉTAIL - ${motor.clientName||'Sans nom'}`;
+  const content = document.getElementById('adminMotorDetailContent'); 
+  if(!content) return;
+  
+  let html = `
+    <div class="motor-info-card">
+      <p><strong>Client:</strong> ${motor.clientName||'-'} | <strong>Tél:</strong> ${motor.clientPhone||'-'}</p>
+      <p><strong>Entreprise client:</strong> ${motor.clientCompany||'-'} | <strong>Adresse:</strong> ${motor.clientAddress||'-'}</p>
+      <p><strong>Technicien responsable:</strong> ${motor.technicianName||'-'} (${motor.technicianEmail||'-'})${motor.technicianCompany ? ' - ' + motor.technicianCompany : ''}</p>
+      <p><strong>Type:</strong> ${motor.motorType==='three_phase'?'Triphasé':'Monophasé'} | <strong>Puissance:</strong> ${motor.power||'-'} kW</p>
+      <p><strong>Statut:</strong> <span class="motor-status status-${motor.status}">${getStatusLabel(motor.status)}</span></p>
+      <p><strong>Panne décrite:</strong> ${motor.faultDescription||'-'}</p>
+      <p><strong>Date création:</strong> ${formatDate(motor.createdAt)} | <strong>Dernière mise à jour:</strong> ${formatDate(motor.updatedAt)}</p>
+    </div>
+    <div class="steps-container">
+  `;   
     motor.steps.forEach((step, stepIndex) => {
       const stepValidated = step.validated;
       const stepCompleted = step.completed;
