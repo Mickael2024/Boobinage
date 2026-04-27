@@ -144,35 +144,307 @@ function initializeStorage() {
   }
   
   // === ÉTAPES PAR DÉFAUT ===
-  function getDefaultSteps(motorType) {
+  function getDefaultSteps(motorType, motorName = '') {
+    // Étapes communes à tous les moteurs
     const commonSteps = [
-      { name: 'DIAGNOSTIC', substeps: ['Identifier type', 'Vérifier panne', 'Court-circuit', 'Bobine coupée', 'Isolation brûlée'] },
-      { name: 'DÉMONTAGE', substeps: ['Démonter flasques/rotor', 'Prendre photos', 'Repérer sens bobinage', 'Noter nombre tours', 'Noter connexion'] },
-      { name: 'DÉBOBINAGE', substeps: ['Enlever anciennes bobines', 'Chauffer stator', 'Nettoyer encoches'] },
-      { name: 'NETTOYAGE', substeps: ['Gratter résidus vernis', 'Souffler air comprimé', 'Vérifier métal coupant'] },
-      { name: 'ISOLATION', substeps: ['Mettre papier isolant', 'Nomex/Mylar/Presspan'] },
-      { name: 'BOBINAGE', substeps: ['Choisir bon diamètre fil', 'Respecter nombre spires', 'Respecter sens', 'Insérer bobines'] },
-      { name: 'CONNEXIONS', substeps: ['Faire jonctions', 'Isoler gaine thermique'] },
-      { name: 'VERNISSAGE', substeps: ['Appliquer vernis', 'Séchage'] },
-      { name: 'REMONTAGE', substeps: ['Remonter rotor', 'Remonter roulements', 'Vérifier alignement'] },
-      { name: 'TEST FINAL', substeps: ['Test isolement Megger', 'Test à vide', 'Vérifier bruit/vibration', 'Vérifier intensité'] }
+      { 
+        name: 'DIAGNOSTIC', 
+        substeps: [
+          'Identifier le type de moteur', 
+          'Relever plaque signalétique', 
+          'Vérifier panne (court-circuit, bobine coupée, isolation brûlée)', 
+          'Mesurer résistance des enroulements',
+          'Prendre photo de la plaque'
+        ] 
+      },
+      { 
+        name: 'DÉMONTAGE', 
+        substeps: [
+          'Démonter les flasques', 
+          'Extraire le rotor', 
+          'Prendre des photos avant démontage', 
+          'Repérer le sens du bobinage', 
+          'Noter le nombre de tours par bobine', 
+          'Noter le type de connexion'
+        ] 
+      },
+      { 
+        name: 'DÉBOBINAGE', 
+        substeps: [
+          'Enlever les anciennes bobines', 
+          'Chauffer le stator (four ou chalumeau)', 
+          'Nettoyer les encoches des résidus de vernis'
+        ] 
+      },
+      { 
+        name: 'NETTOYAGE', 
+        substeps: [
+          'Gratter les résidus de vernis', 
+          'Souffler à l\'air comprimé', 
+          'Vérifier l\'absence de métal coupant', 
+          'Nettoyer les roulements'
+        ] 
+      },
+      { 
+        name: 'ISOLATION', 
+        substeps: [
+          'Mettre du papier isolant dans les encoches', 
+          'Utiliser Nomex/Mylar/Presspan selon la classe', 
+          'Vérifier l\'épaisseur d\'isolation'
+        ] 
+      },
+      { 
+        name: 'BOBINAGE', 
+        substeps: [
+          'Choisir le bon diamètre de fil', 
+          'Respecter le nombre de spires', 
+          'Respecter le sens du bobinage', 
+          'Insérer les bobines dans les encoches',
+          'Fermer les encoches avec des cales'
+        ] 
+      },
+      { 
+        name: 'CONNEXIONS', 
+        substeps: [
+          'Faire les jonctions (soudure ou sertissage)', 
+          'Isoler avec gaine thermorétractable', 
+          'Vérifier le serrage des connexions'
+        ] 
+      },
+      { 
+        name: 'VERNISSAGE', 
+        substeps: [
+          'Appliquer le vernis isolant (trempage ou pinceau)', 
+          'Séchage au four à température contrôlée', 
+          'Vérifier la polymérisation du vernis'
+        ] 
+      },
+      { 
+        name: 'REMONTAGE', 
+        substeps: [
+          'Remonter le rotor', 
+          'Remonter les roulements (neufs si nécessaire)', 
+          'Remonter les flasques', 
+          'Vérifier l\'alignement', 
+          'Remonter le ventilateur'
+        ] 
+      },
+      { 
+        name: 'TEST FINAL', 
+        substeps: [
+          'Test d\'isolement au Megger (500V ou 1000V)', 
+          'Test à vide (bruit, vibration)', 
+          'Vérifier l\'intensité à vide', 
+          'Test en charge si possible',
+          'Vérifier l\'échauffement'
+        ] 
+      }
     ];
+  
+    // Détection du type spécifique via le nom
+    const isHighVoltage = motorName.toLowerCase().includes('haute tension') || 
+                          motorName.toLowerCase().includes('6000v');
+    const isBrakeMotor = motorName.toLowerCase().includes('frein');
+    const isTwoSpeed = motorName.toLowerCase().includes('2 vitesses') || 
+                       motorName.toLowerCase().includes('deux vitesses');
+    const isSubmersible = motorName.toLowerCase().includes('immergée') || 
+                          motorName.toLowerCase().includes('pompe');
+    const isAntiExplosive = motorName.toLowerCase().includes('anti-déflagrant');
+    const isCrusher = motorName.toLowerCase().includes('broyeur');
+    const isCompressor = motorName.toLowerCase().includes('compresseur');
+    const isFan = motorName.toLowerCase().includes('ventilateur');
+    const isWinch = motorName.toLowerCase().includes('treuil');
+    const isMixer = motorName.toLowerCase().includes('malaxeur');
+  
+    // === ÉTAPES SPÉCIFIQUES SELON LE TYPE ===
     
     if (motorType === 'single_phase') {
+      // Moteur monophasé
       commonSteps.splice(5, 0, {
-        name: 'SPÉCIFIQUE MONOPHASÉ', 
-        substeps: ['Bobiner enroulement principal (gros fil)', 'Bobiner auxiliaire (fil fin)', 'Ajouter condensateur', 'Vérifier interrupteur centrifuge']
+        name: 'SPÉCIFIQUE MONOPHASÉ',
+        substeps: [
+          'Identifier enroulement principal (fil plus gros)',
+          'Identifier enroulement auxiliaire (fil plus fin)',
+          'Bobiner l\'enroulement principal',
+          'Bobiner l\'enroulement auxiliaire avec décalage',
+          'Vérifier le condensateur de démarrage',
+          'Vérifier l\'interrupteur centrifuge',
+          'Remplacer le condensateur si nécessaire'
+        ]
       });
     } else if (motorType === 'three_phase') {
-      commonSteps.splice(5, 0, {
+      // Moteur triphasé - étapes de base
+      const threePhaseSteps = {
         name: 'SPÉCIFIQUE TRIPHASÉ',
-        substeps: ['Diviser encoches en 3 groupes', 'Respecter pas de bobinage', 'Respecter séquence phases U,V,W']
+        substeps: [
+          'Diviser les encoches en 3 groupes (U, V, W)',
+          'Respecter le pas de bobinage (1-8, 1-10, etc.)',
+          'Respecter la séquence des phases',
+          'Vérifier le couplage (étoile ou triangle)'
+        ]
+      };
+      
+      // Ajouts spécifiques selon le type
+      if (isHighVoltage) {
+        threePhaseSteps.substeps.push(
+          'Utiliser du fil haute tension spécial',
+          'Renforcer l\'isolation entre phases',
+          'Appliquer vernis haute tension',
+          'Test diélectrique à tension nominale + 2x'
+        );
+      }
+      
+      if (isTwoSpeed) {
+        threePhaseSteps.substeps.push(
+          'Identifier les deux bobinages (petite et grande vitesse)',
+          'Bobiner séparément les deux vitesses',
+          'Respecter le couplage Dahlander',
+          'Vérifier le bon fonctionnement des deux vitesses'
+        );
+      }
+      
+      if (isBrakeMotor) {
+        threePhaseSteps.substeps.push(
+          'Démonter et nettoyer le frein',
+          'Vérifier l\'usure des garnitures',
+          'Régler l\'entrefer du frein',
+          'Tester le déblocage du frein'
+        );
+      }
+      
+      commonSteps.splice(5, 0, threePhaseSteps);
+    }
+  
+    // Ajouts spécifiques post-bobinage
+    if (isSubmersible) {
+      commonSteps.push({
+        name: 'ÉTANCHÉITÉ POMPE IMMERGÉE',
+        substeps: [
+          'Vérifier les joints d\'étanchéité',
+          'Remplacer les joints si nécessaire',
+          'Test d\'étanchéité sous pression',
+          'Remplir d\'huile diélectrique si prévu'
+        ]
       });
     }
-    
+  
+    if (isAntiExplosive) {
+      commonSteps.push({
+        name: 'CERTIFICATION ATEX',
+        substeps: [
+          'Vérifier l\'intégrité de l\'enveloppe antidéflagrante',
+          'Contrôler les jeux de sécurité',
+          'Appliquer peinture spéciale ATEX',
+          'Documenter la conformité EX'
+        ]
+      });
+    }
+  
+    if (isCrusher) {
+      commonSteps.splice(8, 0, {
+        name: 'RENFORT BROYEUR',
+        substeps: [
+          'Utiliser fil à haute résistance mécanique',
+          'Renforcer les têtes de bobines',
+          'Vernis haute tenue aux vibrations',
+          'Équilibrer le rotor dynamiquement'
+        ]
+      });
+    }
+  
+    if (isCompressor) {
+      commonSteps.push({
+        name: 'SPÉCIFIQUE COMPRESSEUR',
+        substeps: [
+          'Vérifier le sens de rotation impératif',
+          'Contrôler le couple de démarrage',
+          'Tester avec le compresseur accouplé'
+        ]
+      });
+    }
+  
+    if (isFan) {
+      commonSteps.push({
+        name: 'SPÉCIFIQUE VENTILATEUR',
+        substeps: [
+          'Vérifier le sens du flux d\'air',
+          'Contrôler l\'équilibrage de l\'hélice',
+          'Tester le débit d\'air'
+        ]
+      });
+    }
+  
+    if (isWinch) {
+      commonSteps.push({
+        name: 'SPÉCIFIQUE TREUIL',
+        substeps: [
+          'Vérifier le frein mécanique',
+          'Tester le couple de levage',
+          'Contrôler les fins de course'
+        ]
+      });
+    }
+  
+    if (isMixer) {
+      commonSteps.push({
+        name: 'SPÉCIFIQUE MALAXEUR',
+        substeps: [
+          'Renforcer l\'isolation contre l\'humidité',
+          'Vérifier l\'étanchéité du bout d\'arbre',
+          'Tester avec la charge de malaxage'
+        ]
+      });
+    }
+  
+    // Ajout des étapes spécifiques selon le nombre de pôles (détecté dans le nom)
+    const polesMatch = motorName.match(/(\d+)\s*RPM/i);
+    if (polesMatch) {
+      const rpm = parseInt(polesMatch[1]);
+      let polesStep = null;
+      
+      if (rpm >= 2800) {
+        polesStep = {
+          name: 'MOTEUR 2 PÔLES (3000 RPM)',
+          substeps: [
+            'Pas de bobinage généralement 1-8 ou 1-10',
+            'Vitesse élevée : soigner l\'équilibrage',
+            'Vérifier les roulements haute vitesse'
+          ]
+        };
+      } else if (rpm >= 1400 && rpm < 1500) {
+        polesStep = {
+          name: 'MOTEUR 4 PÔLES (1500 RPM)',
+          substeps: [
+            'Pas de bobinage généralement 1-6 ou 1-8',
+            'Configuration la plus courante'
+          ]
+        };
+      } else if (rpm >= 900 && rpm < 1000) {
+        polesStep = {
+          name: 'MOTEUR 6 PÔLES (1000 RPM)',
+          substeps: [
+            'Pas de bobinage généralement 1-6',
+            'Couple plus élevé au démarrage'
+          ]
+        };
+      } else if (rpm >= 700 && rpm < 800) {
+        polesStep = {
+          name: 'MOTEUR 8 PÔLES (750 RPM)',
+          substeps: [
+            'Pas de bobinage généralement 1-5',
+            'Nombre d\'encoches plus important',
+            'Couple très élevé'
+          ]
+        };
+      }
+      
+      if (polesStep) {
+        commonSteps.splice(6, 0, polesStep);
+      }
+    }
+  
     return commonSteps;
   }
-  
   // === UTILISATEURS ===
   function getUsers() { return JSON.parse(localStorage.getItem('fortico_users') || '[]'); }
   function saveUser(user) { const users = getUsers(); users.push(user); localStorage.setItem('fortico_users', JSON.stringify(users)); return user; }
@@ -351,35 +623,75 @@ function migrateMotorTypes() {
   function getCurrentUser() { return JSON.parse(sessionStorage.getItem('currentUser') || 'null'); }
   function logout() { sessionStorage.removeItem('currentUser'); }
   
-  // === INITIALISATION TYPES PAR DÉFAUT ===
-  function initializeDefaultMotorTypes() {
-    const types = getMotorTypes();
-    if (types.length === 0) {
-      saveMotorType({
-        name: 'Moteur Triphasé Standard 15kW',
-        motorType: 'three_phase',
-        power: '15',
-        voltage: '400',
-        current: '28.5',
-        frequency: '50',
-        rpm: '1450',
-        powerFactor: '0.85',
-        insulationClass: 'F',
-        couplingType: 'star',
-        poles: '4'
-      });
-      saveMotorType({
-        name: 'Moteur Monophasé 2.2kW',
-        motorType: 'single_phase',
-        power: '2.2',
-        voltage: '230',
-        current: '12',
-        frequency: '50',
-        rpm: '1420',
-        powerFactor: '0.8',
-        insulationClass: 'B',
-        couplingType: '',
-        poles: '2'
-      });
-    }
+ // === INITIALISATION TYPES PAR DÉFAUT ===
+function initializeDefaultMotorTypes() {
+  const types = getMotorTypes();
+  if (types.length === 0) {
+    // Liste complète des types de moteurs prédéfinis
+    const defaultTypes = [
+      // ===== TRIPHASÉS 1500 RPM (4 pôles) =====
+      { name: 'Moteur Triphasé 0.75kW - 1500 RPM', motorType: 'three_phase', power: '0.75', voltage: '400', current: '2.1', frequency: '50', rpm: '1420', powerFactor: '0.75', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Triphasé 1.1kW - 1500 RPM', motorType: 'three_phase', power: '1.1', voltage: '400', current: '2.8', frequency: '50', rpm: '1425', powerFactor: '0.77', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Triphasé 1.5kW - 1500 RPM', motorType: 'three_phase', power: '1.5', voltage: '400', current: '3.5', frequency: '50', rpm: '1430', powerFactor: '0.79', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Triphasé 2.2kW - 1500 RPM', motorType: 'three_phase', power: '2.2', voltage: '400', current: '4.9', frequency: '50', rpm: '1435', powerFactor: '0.81', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Triphasé 3kW - 1500 RPM', motorType: 'three_phase', power: '3', voltage: '400', current: '6.4', frequency: '50', rpm: '1440', powerFactor: '0.82', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Triphasé 4kW - 1500 RPM', motorType: 'three_phase', power: '4', voltage: '400', current: '8.3', frequency: '50', rpm: '1445', powerFactor: '0.83', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 5.5kW - 1500 RPM', motorType: 'three_phase', power: '5.5', voltage: '400', current: '11.5', frequency: '50', rpm: '1450', powerFactor: '0.84', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 7.5kW - 1500 RPM', motorType: 'three_phase', power: '7.5', voltage: '400', current: '15.2', frequency: '50', rpm: '1455', powerFactor: '0.84', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 11kW - 1500 RPM', motorType: 'three_phase', power: '11', voltage: '400', current: '21.5', frequency: '50', rpm: '1460', powerFactor: '0.85', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 15kW - 1500 RPM', motorType: 'three_phase', power: '15', voltage: '400', current: '28.5', frequency: '50', rpm: '1465', powerFactor: '0.85', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 18.5kW - 1500 RPM', motorType: 'three_phase', power: '18.5', voltage: '400', current: '35', frequency: '50', rpm: '1470', powerFactor: '0.86', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 22kW - 1500 RPM', motorType: 'three_phase', power: '22', voltage: '400', current: '41', frequency: '50', rpm: '1470', powerFactor: '0.86', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 30kW - 1500 RPM', motorType: 'three_phase', power: '30', voltage: '400', current: '55', frequency: '50', rpm: '1475', powerFactor: '0.87', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Triphasé 37kW - 1500 RPM', motorType: 'three_phase', power: '37', voltage: '400', current: '68', frequency: '50', rpm: '1480', powerFactor: '0.87', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      
+      // ===== TRIPHASÉS 3000 RPM (2 pôles) =====
+      { name: 'Moteur Triphasé 1.5kW - 3000 RPM', motorType: 'three_phase', power: '1.5', voltage: '400', current: '3.2', frequency: '50', rpm: '2880', powerFactor: '0.82', insulationClass: 'F', couplingType: 'star', poles: '2' },
+      { name: 'Moteur Triphasé 2.2kW - 3000 RPM', motorType: 'three_phase', power: '2.2', voltage: '400', current: '4.5', frequency: '50', rpm: '2890', powerFactor: '0.83', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      { name: 'Moteur Triphasé 3kW - 3000 RPM', motorType: 'three_phase', power: '3', voltage: '400', current: '6.1', frequency: '50', rpm: '2890', powerFactor: '0.84', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      { name: 'Moteur Triphasé 5.5kW - 3000 RPM', motorType: 'three_phase', power: '5.5', voltage: '400', current: '11', frequency: '50', rpm: '2910', powerFactor: '0.86', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      { name: 'Moteur Triphasé 7.5kW - 3000 RPM', motorType: 'three_phase', power: '7.5', voltage: '400', current: '14.5', frequency: '50', rpm: '2920', powerFactor: '0.87', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      { name: 'Moteur Triphasé 11kW - 3000 RPM', motorType: 'three_phase', power: '11', voltage: '400', current: '21', frequency: '50', rpm: '2930', powerFactor: '0.88', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      
+      // ===== TRIPHASÉS 1000 RPM (6 pôles) =====
+      { name: 'Moteur Triphasé 3kW - 1000 RPM', motorType: 'three_phase', power: '3', voltage: '400', current: '7.2', frequency: '50', rpm: '950', powerFactor: '0.76', insulationClass: 'F', couplingType: 'star', poles: '6' },
+      { name: 'Moteur Triphasé 5.5kW - 1000 RPM', motorType: 'three_phase', power: '5.5', voltage: '400', current: '12.5', frequency: '50', rpm: '960', powerFactor: '0.78', insulationClass: 'F', couplingType: 'delta', poles: '6' },
+      { name: 'Moteur Triphasé 7.5kW - 1000 RPM', motorType: 'three_phase', power: '7.5', voltage: '400', current: '16.5', frequency: '50', rpm: '965', powerFactor: '0.79', insulationClass: 'F', couplingType: 'delta', poles: '6' },
+      { name: 'Moteur Triphasé 11kW - 1000 RPM', motorType: 'three_phase', power: '11', voltage: '400', current: '23', frequency: '50', rpm: '970', powerFactor: '0.80', insulationClass: 'F', couplingType: 'delta', poles: '6' },
+      
+      // ===== TRIPHASÉS 750 RPM (8 pôles) =====
+      { name: 'Moteur Triphasé 5.5kW - 750 RPM', motorType: 'three_phase', power: '5.5', voltage: '400', current: '14', frequency: '50', rpm: '720', powerFactor: '0.72', insulationClass: 'F', couplingType: 'delta', poles: '8' },
+      { name: 'Moteur Triphasé 11kW - 750 RPM', motorType: 'three_phase', power: '11', voltage: '400', current: '25', frequency: '50', rpm: '730', powerFactor: '0.75', insulationClass: 'F', couplingType: 'delta', poles: '8' },
+      { name: 'Moteur Triphasé 15kW - 750 RPM', motorType: 'three_phase', power: '15', voltage: '400', current: '33', frequency: '50', rpm: '735', powerFactor: '0.77', insulationClass: 'F', couplingType: 'delta', poles: '8' },
+      
+      // ===== MONOPHASÉS 1500 RPM =====
+      { name: 'Moteur Monophasé 0.37kW - 1500 RPM', motorType: 'single_phase', power: '0.37', voltage: '230', current: '2.8', frequency: '50', rpm: '1400', powerFactor: '0.72', insulationClass: 'B', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 0.55kW - 1500 RPM', motorType: 'single_phase', power: '0.55', voltage: '230', current: '3.8', frequency: '50', rpm: '1410', powerFactor: '0.75', insulationClass: 'B', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 0.75kW - 1500 RPM', motorType: 'single_phase', power: '0.75', voltage: '230', current: '5.0', frequency: '50', rpm: '1420', powerFactor: '0.78', insulationClass: 'F', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 1.1kW - 1500 RPM', motorType: 'single_phase', power: '1.1', voltage: '230', current: '7.0', frequency: '50', rpm: '1430', powerFactor: '0.80', insulationClass: 'F', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 1.5kW - 1500 RPM', motorType: 'single_phase', power: '1.5', voltage: '230', current: '9.2', frequency: '50', rpm: '1435', powerFactor: '0.81', insulationClass: 'F', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 2.2kW - 1500 RPM', motorType: 'single_phase', power: '2.2', voltage: '230', current: '12.5', frequency: '50', rpm: '1440', powerFactor: '0.82', insulationClass: 'F', couplingType: '', poles: '4' },
+      { name: 'Moteur Monophasé 3kW - 1500 RPM', motorType: 'single_phase', power: '3', voltage: '230', current: '16.5', frequency: '50', rpm: '1445', powerFactor: '0.83', insulationClass: 'F', couplingType: '', poles: '4' },
+      
+      // ===== MONOPHASÉS 3000 RPM =====
+      { name: 'Moteur Monophasé 0.75kW - 3000 RPM', motorType: 'single_phase', power: '0.75', voltage: '230', current: '4.8', frequency: '50', rpm: '2830', powerFactor: '0.76', insulationClass: 'B', couplingType: '', poles: '2' },
+      { name: 'Moteur Monophasé 1.1kW - 3000 RPM', motorType: 'single_phase', power: '1.1', voltage: '230', current: '6.8', frequency: '50', rpm: '2850', powerFactor: '0.79', insulationClass: 'B', couplingType: '', poles: '2' },
+      { name: 'Moteur Monophasé 2.2kW - 3000 RPM', motorType: 'single_phase', power: '2.2', voltage: '230', current: '12', frequency: '50', rpm: '2900', powerFactor: '0.82', insulationClass: 'F', couplingType: '', poles: '2' },
+      
+      // ===== MOTEURS SPÉCIAUX =====
+      { name: 'Moteur Frein Triphasé 5.5kW', motorType: 'three_phase', power: '5.5', voltage: '400', current: '11.5', frequency: '50', rpm: '1450', powerFactor: '0.84', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Pompe Immergée 4kW', motorType: 'three_phase', power: '4', voltage: '400', current: '8.5', frequency: '50', rpm: '2890', powerFactor: '0.83', insulationClass: 'F', couplingType: 'delta', poles: '2' },
+      { name: 'Moteur Ventilateur 1.5kW', motorType: 'three_phase', power: '1.5', voltage: '400', current: '3.5', frequency: '50', rpm: '1420', powerFactor: '0.79', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Compresseur 10kW', motorType: 'three_phase', power: '10', voltage: '400', current: '19.5', frequency: '50', rpm: '1465', powerFactor: '0.85', insulationClass: 'F', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Broyeur 15kW', motorType: 'three_phase', power: '15', voltage: '400', current: '28.5', frequency: '50', rpm: '1460', powerFactor: '0.85', insulationClass: 'H', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Treuil 3kW', motorType: 'three_phase', power: '3', voltage: '400', current: '6.5', frequency: '50', rpm: '1420', powerFactor: '0.81', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur Malaxeur 2.2kW', motorType: 'three_phase', power: '2.2', voltage: '400', current: '4.9', frequency: '50', rpm: '1410', powerFactor: '0.80', insulationClass: 'F', couplingType: 'star', poles: '4' },
+      { name: 'Moteur à 2 vitesses 1.5/3kW', motorType: 'three_phase', power: '3', voltage: '400', current: '6.8', frequency: '50', rpm: '1450/2900', powerFactor: '0.82', insulationClass: 'F', couplingType: 'star/delta', poles: '4/2' },
+      { name: 'Moteur Anti-déflagrant 7.5kW', motorType: 'three_phase', power: '7.5', voltage: '400', current: '15', frequency: '50', rpm: '1460', powerFactor: '0.83', insulationClass: 'H', couplingType: 'delta', poles: '4' },
+      { name: 'Moteur Haute Tension 200kW - 6000V', motorType: 'three_phase', power: '200', voltage: '6000', current: '24', frequency: '50', rpm: '1485', powerFactor: '0.88', insulationClass: 'H', couplingType: 'star', poles: '4' }
+    ];
+    
+    // Enregistrer tous les types
+    defaultTypes.forEach(type => saveMotorType(type));
   }
+}

@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortico Rewind • Rebobinage Professionnel de Moteurs Électriques</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #0f172a;
+            --accent: #f59e0b;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --bg-gray: #f1f5f9;
+            --text-dark: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border-light: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ========== LOADER ========== */
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s, visibility 0.4s;
+        }
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ========== NAVIGATION ========== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.3s;
+        }
+        .navbar.scrolled {
+            box-shadow: var(--shadow-lg);
+        }
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+        .nav-logo i {
+            color: var(--primary);
+            font-size: 28px;
+        }
+        .nav-logo span {
+            color: var(--primary);
+        }
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 32px;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.15s;
+            position: relative;
+        }
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .btn-nav {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+        .btn-nav:hover {
+            background: var(--primary-dark);
+        }
+        .btn-nav::after {
+            display: none !important;
+        }
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+        .nav-toggle span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-dark);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 24px 80px;
+            background: linear-gradient(135deg, #f0f5ff 0%, #e8f0fe 50%, #f8fafc 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-content h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        .hero-content h1 span {
+            color: var(--primary);
+        }
+        .hero-content p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            padding: 14px 28px;
+            border: 2px solid var(--primary);
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-image .icon-wrapper {
+            width: 300px;
+            height: 300px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-xl);
+            animation: float 6s ease-in-out infinite;
+            position: relative;
+        }
+        .hero-image .icon-wrapper i {
+            font-size: 120px;
+            color: var(--primary);
+        }
+        .hero-image .icon-wrapper::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px dashed var(--primary-light);
+            animation: spin-slow 20s linear infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes spin-slow {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== SECTIONS ========== */
+        .section {
+            padding: 100px 24px;
+        }
+        .section-container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 16px;
+        }
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ========== SERVICES ========== */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .service-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-light);
+        }
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .service-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        .service-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+        .service-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ========== PROCESSUS ========== */
+        .process-section {
+            background: var(--secondary);
+            color: white;
+        }
+        .process-section .section-header h2 {
+            color: white;
+        }
+        .process-section .section-header p {
+            color: #94a3b8;
+        }
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            counter-reset: step;
+        }
+        .process-step {
+            text-align: center;
+            position: relative;
+            padding-top: 60px;
+        }
+        .process-step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .process-step h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .process-step p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* ========== FORMULAIRE ========== */
+        .form-section {
+            background: var(--bg-light);
+        }
+        .request-form {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.15s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ========== CONTACT ========== */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+        }
+        .contact-info h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .contact-info p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--bg-gray);
+            border-radius: var(--radius);
+        }
+        .contact-item i {
+            font-size: 24px;
+            color: var(--primary);
+            width: 40px;
+            text-align: center;
+        }
+        .contact-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        .contact-item span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .contact-item a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .contact-map {
+            background: var(--bg-gray);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 350px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            background: var(--secondary);
+            color: white;
+            padding: 60px 24px 30px;
+        }
+        .footer-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+        }
+        .footer h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .footer p, .footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            line-height: 2;
+            display: block;
+        }
+        .footer a:hover {
+            color: white;
+        }
+        .footer-bottom {
+            max-width: 1280px;
+            margin: 40px auto 0;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+        .social-links a:hover {
+            background: var(--primary);
+        }
+
+        /* ========== ANIMATIONS SCROLL ========== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========== TOAST ========== */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .toast {
+            background: white;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+            max-width: 400px;
+        }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-content h1 { font-size: 2.2rem; }
+            .hero-content p { max-width: 100%; }
+            .hero-buttons { justify-content: center; }
+            .hero-image .icon-wrapper { width: 200px; height: 200px; }
+            .hero-image .icon-wrapper i { font-size: 80px; }
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 24px;
+                transform: translateY(-200%);
+                transition: transform 0.3s;
+                box-shadow: var(--shadow-lg);
+            }
+            .nav-links.active { transform: translateY(0); }
+            .nav-toggle { display: flex; }
+            .form-grid, .contact-grid, .footer-container {
+                grid-template-columns: 1fr;
+            }
+            .request-form { padding: 24px; }
+            .section { padding: 60px 24px; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 1.8rem; }
+            .section-header h2 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div class="page-loader">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <i class="fas fa-bolt"></i>
+                Fortico<span>Rewind</span>
+            </a>
+            <button class="nav-toggle" id="navToggle">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Accueil</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#process">Processus</a></li>
+                <li><a href="#request">Demander un devis</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="index.html" class="btn-nav">Espace Client</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content reveal">
+                <h1>Rebobinage <span>Professionnel</span> de Moteurs Électriques</h1>
+                <p>Expertise technique, diagnostic complet et réparation de qualité pour tous vos moteurs électriques. Plus de 15 ans d'expérience au service de l'industrie.</p>
+                <div class="hero-buttons">
+                    <a href="#request" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Demander un devis
+                    </a>
+                    <a href="#services" class="btn-outline">
+                        <i class="fas fa-cogs"></i> Nos services
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image reveal">
+                <div class="icon-wrapper">
+                    <i class="fas fa-microchip"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services -->
+    <section class="section" id="services">
+        <div class="section-container">
+            <div class="section-header reveal">
+                <h2>Nos Services de Rebobinage</h2>
+                <p>Une gamme complète de services pour la réparation et l'entretien de vos moteurs électriques</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-search"></i></div>
+                    <h3>Diagnostic Complet</h3>
+                    <p>Analyse approfondie de votre moteur : tests électriques, mesure d'isolement, détection de pannes.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-tools"></i></div>
+                    <h3>Rebobinage Moteur</h3>
+                    <p>Rebobinage complet ou partiel de tous types de moteurs : triphasés, monophasés, haute tension.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-balance-scale"></i></div>
+                    <h3>Équilibrage Rotor</h3>
+                    <p>Équilibrage dynamique de précision pour éliminer les vibrations et prolonger la durée de vie.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Traitement Isolation</h3>
+                    <p>Vernissage sous vide, résine d'imprégnation, protection contre l'humidité et les agressions.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <h3>Tests & Contrôles</h3>
+                    <p>Tests de rigidité diélectrique, mesure de résistance, contrôle des performances.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon"><i class="fas fa-truck"></i></div>
+                    <h3>Maintenance Préventive</h3>
+                    <p>Programmes de maintenance pour anticiper les pannes et optimiser la durée de vie.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Processus -->
+    <section class="section process-section" id="process">
+        <div class="section-container">
+            <div class="section-header reveal">
+                <h2>Notre Processus de Rebobinage</h2>
+                <p>Une méthodologie rigoureuse en 8 étapes pour garantir un résultat fiable et durable</p>
+            </div>
+            <div class="process-steps">
+                <div class="process-step reveal">
+                    <h3>Réception</h3>
+                    <p>Identification du moteur et relevé de la plaque signalétique</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Diagnostic</h3>
+                    <p>Tests électriques complets et inspection visuelle approfondie</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Démontage</h3>
+                    <p>Démontage soigné avec documentation photographique</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Débobinage</h3>
+                    <p>Retrait des anciens enroulements et nettoyage du stator</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Bobinage</h3>
+                    <p>Rebobinage avec fil de cuivre de qualité, respect des spécifications</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Vernissage</h3>
+                    <p>Imprégnation sous vide pour une isolation parfaite</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Remontage</h3>
+                    <p>Remontage avec roulements neufs et alignement précis</p>
+                </div>
+                <div class="process-step reveal">
+                    <h3>Tests Finaux</h3>
+                    <p>Validation complète : isolement, intensité, vibrations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulaire de demande -->
+    <section class="section form-section" id="request">
+        <div class="section-container">
+            <div class="section-header reveal">
+                <h2>Demander un Devis</h2>
+                <p>Remplissez le formulaire ci-dessous pour obtenir un devis personnalisé pour la réparation de votre moteur</p>
+            </div>
+            <form class="request-form reveal" id="requestForm">
+                <!-- Informations contact -->
+                <div class="form-section-title">
+                    <i class="fas fa-user"></i> Vos informations
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nom complet *</label>
+                        <input type="text" id="reqName" placeholder="Votre nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="reqEmail" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone *</label>
+                        <input type="tel" id="reqPhone" placeholder="+33..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Entreprise</label>
+                        <input type="text" id="reqCompany" placeholder="Nom de l'entreprise">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Adresse</label>
+                        <input type="text" id="reqAddress" placeholder="Votre adresse complète">
+                    </div>
+                </div>
+
+                <!-- Informations moteur -->
+                <div class="form-section-title" style="margin-top: 32px;">
+                    <i class="fas fa-microchip"></i> Informations du moteur
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Type de moteur *</label>
+                        <select id="reqMotorType" required>
+                            <option value="">-- Sélectionner --</option>
+                            <option value="three_phase">Triphasé</option>
+                            <option value="single_phase">Monophasé</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Puissance (kW)</label>
+                        <input type="number" step="0.01" id="reqPower" placeholder="Ex: 15">
+                    </div>
+                    <div class="form-group">
+                        <label>Tension (V)</label>
+                        <input type="number" id="reqVoltage" placeholder="Ex: 400">
+                    </div>
+                    <div class="form-group">
+                        <label>Courant (A)</label>
+                        <input type="number" step="0.1" id="reqCurrent" placeholder="Ex: 28.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Fréquence (Hz)</label>
+                        <input type="number" id="reqFrequency" placeholder="Ex: 50">
+                    </div>
+                    <div class="form-group">
+                        <label>Vitesse (RPM)</label>
+                        <input type="number" id="reqRpm" placeholder="Ex: 1450">
+                    </div>
+                    <div class="form-group">
+                        <label>Classe d'isolation</label>
+                        <select id="reqInsulation">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="A">A (105°C)</option>
+                            <option value="B">B (130°C)</option>
+                            <option value="F">F (155°C)</option>
+                            <option value="H">H (180°C)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Couplage</label>
+                        <select id="reqCoupling">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="star">Étoile</option>
+                            <option value="delta">Triangle</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Description de la panne *</label>
+                        <textarea id="reqDescription" placeholder="Décrivez le problème rencontré (odeur de brûlé, ne démarre plus, bruit anormal, etc.)" required></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 24px; justify-content: center; font-size: 1.1rem; padding: 16px;">
+                    <i class="fas fa-paper-plane"></i> Envoyer la demande de devis
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section" id="contact">
+        <div class="section-container">
+            <div class="section-header reveal">
+                <h2>Contactez-nous</h2>
+                <p>Une question ? Besoin d'un conseil ? Notre équipe est à votre écoute</p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info reveal">
+                    <h3>Nos coordonnées</h3>
+                    <p>N'hésitez pas à nous contacter pour toute demande d'information ou de devis.</p>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Adresse</strong>
+                            <span>123 Avenue de l'Industrie, 75001 Paris, France</span>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Téléphone</strong>
+                            <a href="tel:+33123456789">+33 1 23 45 67 89</a>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <a href="mailto:contact@forticorewind.com">contact@forticorewind.com</a>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <div>
+                            <strong>WhatsApp</strong>
+                            <a href="https://wa.me/33123456789" target="_blank">+33 1 23 45 67 89</a>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <i class="far fa-clock"></i>
+                        <div>
+                            <strong>Horaires</strong>
+                            <span>Lundi - Vendredi : 8h00 - 18h00<br>Samedi : 8h00 - 12h00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-map reveal">
+                    <i class="fas fa-map-marked-alt" style="font-size: 80px; color: var(--text-light);"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <h3><i class="fas fa-bolt"></i> Fortico Rewind</h3>
+                <p>Expert en rebobinage de moteurs électriques depuis 2009. Qualité, fiabilité et professionnalisme au service de votre industrie.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div>
+                <h3>Services</h3>
+                <a href="#services">Diagnostic</a>
+                <a href="#services">Rebobinage</a>
+                <a href="#services">Équilibrage</a>
+                <a href="#services">Vernissage</a>
+                <a href="#services">Maintenance</a>
+            </div>
+            <div>
+                <h3>Liens utiles</h3>
+                <a href="#process">Processus</a>
+                <a href="#request">Devis</a>
+                <a href="#contact">Contact</a>
+                <a href="index.html">Espace Client</a>
+                <a href="#">Mentions légales</a>
+            </div>
+            <div>
+                <h3>Contact</h3>
+                <a href="tel:+33123456789">+33 1 23 45 67 89</a>
+                <a href="mailto:contact@forticorewind.com">contact@forticorewind.com</a>
+                <a href="#">123 Avenue de l'Industrie</a>
+                <a href="#">75001 Paris, France</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Fortico Rewind. Tous droits réservés. | <a href="#" style="color: var(--primary);">Politique de confidentialité</a> | <a href="#" style="color: var(--primary);">CGV</a></p>
+        </div>
+    </footer>
+
+    <script src="js/storage.js"></script>
+    <script>
+        // ========== INITIALISATION ==========
+        initializeStorage();
+        initializeDefaultMotorTypes();
+
+        // ========== LOADER ==========
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelector('.page-loader').classList.add('hidden');
+            }, 600);
+        });
+
+        // ========== NAVIGATION ==========
+        const navbar = document.getElementById('navbar');
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        // Scroll effect
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu au clic sur un lien
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // ========== SCROLL REVEAL ANIMATION ==========
+        function revealOnScroll() {
+            const elements = document.querySelectorAll('.reveal');
+            const windowHeight = window.innerHeight;
+            
+            elements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                const revealPoint = 100;
+                
+                if (elementTop < windowHeight - revealPoint) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+        revealOnScroll();
+
+        // ========== TOAST NOTIFICATION ==========
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: 'check-circle', error: 'times-circle' };
+            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ========== FORMULAIRE ==========
+        document.getElementById('requestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Récupérer les données
+            const request = {
+                id: 'req_' + Date.now(),
+                clientName: document.getElementById('reqName').value,
+                clientEmail: document.getElementById('reqEmail').value,
+                clientPhone: document.getElementById('reqPhone').value,
+                clientCompany: document.getElementById('reqCompany').value,
+                clientAddress: document.getElementById('reqAddress').value,
+                motorType: document.getElementById('reqMotorType').value,
+                power: document.getElementById('reqPower').value,
+                voltage: document.getElementById('reqVoltage').value,
+                current: document.getElementById('reqCurrent').value,
+                frequency: document.getElementById('reqFrequency').value,
+                rpm: document.getElementById('reqRpm').value,
+                insulationClass: document.getElementById('reqInsulation').value,
+                couplingType: document.getElementById('reqCoupling').value,
+                description: document.getElementById('reqDescription').value,
+                createdAt: new Date().toISOString(),
+                status: 'new'
+            };
+            
+            // Sauvegarder dans localStorage
+            const requests = JSON.parse(localStorage.getItem('fortico_web_requests') || '[]');
+            requests.push(request);
+            localStorage.setItem('fortico_web_requests', JSON.stringify(requests));
+            
+            // Afficher confirmation
+            showToast('Demande de devis envoyée avec succès ! Nous vous contacterons dans les 24h.', 'success');
+            
+            // Réinitialiser le formulaire
+            this.reset();
+            
+            // Faire défiler vers le haut
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // ========== COMPTEUR DE STATS (animation) ==========
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        console.log('Fortico Rewind - Plateforme Web initialisée');
+        console.log('Demandes stockées dans localStorage: fortico_web_requests');
+    </script>
+</body>
+</html>
