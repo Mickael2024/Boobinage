@@ -324,118 +324,334 @@ window.viewMotorDetail = function(motorId) {
   const content = document.getElementById('motorDetailContent'); 
   if(!content) return;
   
+  // Récupérer les rapports existants pour ce moteur
+  const reports = getReportsByMotor(motorId);
+  
   let html = `
     <div class="motor-info-card">
       <p><strong>Client:</strong> ${motor.clientName||'-'} | <strong>Tél:</strong> ${motor.clientPhone||'-'}</p>
-      <p><strong>Entreprise client:</strong> ${motor.clientCompany||'-'} | <strong>Adresse:</strong> ${motor.clientAddress||'-'}</p>
-      <p><strong>Technicien responsable:</strong> ${motor.technicianName||'-'} (${motor.technicianEmail||'-'})</p>
+      <p><strong>Technicien:</strong> ${motor.technicianName||'-'} (${motor.technicianEmail||'-'})</p>
       <p><strong>Type:</strong> ${motor.motorType==='three_phase'?'Triphasé':'Monophasé'} | <strong>Puissance:</strong> ${motor.power||'-'} kW</p>
       <p><strong>Statut:</strong> <span class="motor-status status-${motor.status}">${getStatusLabel(motor.status)}</span></p>
-      <p><strong>Panne décrite:</strong> ${motor.faultDescription||'-'}</p>
-      <p><strong>Date création:</strong> ${formatDate(motor.createdAt)}</p>
     </div>
     <div class="steps-container">
   `;
+  
+  motor.steps.forEach((step, stepIndex) => {
+    const stepValidated = step.validated;
+    const stepCompleted = step.completed;
     
-    motor.steps.forEach((step, stepIndex) => {
-      const stepValidated = step.validated;
-      const stepCompleted = step.completed;
-      
-      // Initialiser substepsCompleted si nécessaire (pour les anciens moteurs)
-      if (!step.substepsCompleted) {
-        step.substepsCompleted = new Array(step.substeps.length).fill(stepCompleted || false);
-      }
+    if (!step.substepsCompleted) {
+      step.substepsCompleted = new Array(step.substeps.length).fill(stepCompleted || false);
+    }
+    
+    // Trouver les rapports pour cette étape
+    const stepReports = reports.filter(r => r.stepId === step.id);
+    const reportCount = stepReports.length;
+    
+    html += `
+      <div class="step-card ${stepValidated ? 'validated' : stepCompleted ? 'completed' : ''}">
+        <div class="step-header">
+          <h4>${step.name}</h4>
+          <div class="step-status">
+            ${stepValidated ? '<span class="badge success"><i class="fas fa-check-circle"></i> Validé</span>' : 
+              stepCompleted ? '<span class="badge warning"><i class="fas fa-clock"></i> En attente validation</span>' : 
+              '<span class="badge">À faire</span>'}
+          </div>
+        </div>
+        <div class="step-substeps">
+    `;
+    
+    step.substeps.forEach((substep, subIndex) => {
+      const checkboxId = `cb_${motor.id}_${step.id}_${subIndex}`;
+      const isChecked = step.substepsCompleted[subIndex] ? 'checked' : '';
+      const isDisabled = stepValidated ? 'disabled' : '';
       
       html += `
-        <div class="step-card ${stepValidated ? 'validated' : stepCompleted ? 'completed' : ''}">
-          <div class="step-header">
-            <h4>${step.name}</h4>
-            <div class="step-status">
-              ${stepValidated ? '<span class="badge success"><i class="fas fa-check-circle"></i> Validé</span>' : 
-                stepCompleted ? '<span class="badge warning"><i class="fas fa-clock"></i> En attente validation</span>' : 
-                '<span class="badge">À faire</span>'}
-            </div>
-          </div>
-          <div class="step-substeps">
+        <label class="checkbox-label ${stepValidated ? 'disabled' : ''}" for="${checkboxId}">
+          <input type="checkbox" id="${checkboxId}" ${isChecked} ${isDisabled}
+                 data-motor-id="${motor.id}" data-step-id="${step.id}" data-substep-index="${subIndex}">
+          <span>${substep}</span>
+        </label>
       `;
-      
-      // Générer les sous-étapes avec leurs états individuels
-      step.substeps.forEach((substep, subIndex) => {
-        const checkboxId = `cb_${motor.id}_${step.id}_${subIndex}`;
-        const isChecked = step.substepsCompleted[subIndex] ? 'checked' : '';
-        const isDisabled = stepValidated ? 'disabled' : '';
-        
-        html += `
-          <label class="checkbox-label ${stepValidated ? 'disabled' : ''}" for="${checkboxId}">
-            <input type="checkbox" 
-                   id="${checkboxId}" 
-                   ${isChecked} 
-                   ${isDisabled}
-                   data-motor-id="${motor.id}"
-                   data-step-id="${step.id}"
-                   data-substep-index="${subIndex}">
-            <span>${substep}</span>
-          </label>
-        `;
-      });
-      
-      html += `</div>`;
-      
-      if (step.completedAt) {
-        html += `<small><i class="far fa-calendar"></i> Toutes les sous-étapes complétées le ${formatDate(step.completedAt)}</small>`;
-      }
-      if (step.validatedAt) {
-        html += `<small><i class="fas fa-check-circle" style="color:var(--success);"></i> Validé le ${formatDate(step.validatedAt)}</small>`;
-      }
-      
-      html += `</div>`;
     });
     
     html += `</div>`;
-    content.innerHTML = html;
     
-    // Ajouter les événements aux checkboxes
-    content.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
-      cb.addEventListener('change', function(e) {
-        e.stopPropagation();
-        const motorId = this.dataset.motorId;
-        const stepId = this.dataset.stepId;
-        const substepIndex = parseInt(this.dataset.substepIndex);
-        const isChecked = this.checked;
-        
-        // Mettre à jour la sous-étape spécifique
-        updateMotorSubstep(motorId, stepId, substepIndex, isChecked);
-        showNotification(isChecked ? 'Sous-étape complétée' : 'Sous-étape décochée', 'info');
-        
-        // Recharger le moteur pour voir si l'étape est complète
-        const updatedMotor = getMotorById(motorId);
-        const step = updatedMotor.steps.find(s => s.id === stepId);
-        
-        // Si l'étape vient d'être complétée (toutes les sous-étapes cochées)
-        if (step && step.completed && !step.validated) {
-          setTimeout(() => {
-            showPopup({
-              title: 'Demande validation',
-              message: `L'étape "${step.name}" est complète. Demander validation admin ?`,
-              icon: 'check-circle',
-              confirmText: 'Demander',
-              cancelText: 'Plus tard',
-              onConfirm: () => {
-                showNotification('Demande envoyée', 'success');
-                viewMotorDetail(motorId);
-              },
-              onCancel: () => {
-                viewMotorDetail(motorId);
-              }
-            });
-          }, 100);
-        } else {
-          viewMotorDetail(motorId);
+    // Bouton pour envoyer un rapport avec photo
+    html += `
+      <div class="step-actions">
+        <button class="cyber-button small send-report-btn" data-motor-id="${motor.id}" data-step-id="${step.id}" data-step-name="${step.name}">
+          <i class="fas fa-camera"></i> Envoyer rapport photo
+        </button>
+        ${reportCount > 0 ? `<span class="report-badge"><i class="fas fa-paperclip"></i> ${reportCount} rapport(s)</span>` : ''}
+      </div>
+    `;
+    
+    // Afficher les miniatures des rapports existants
+    if (stepReports.length > 0) {
+      html += `<div class="report-thumbnails">`;
+      stepReports.forEach(report => {
+        if (report.photos && report.photos.length > 0) {
+          report.photos.forEach((photo, pi) => {
+            html += `<img src="${photo}" class="report-thumb" onclick="viewReportDetail('${report.id}')" title="Rapport du ${formatDate(report.createdAt)}">`;
+          });
+        }
+        if (report.description) {
+          html += `<div class="report-note" onclick="viewReportDetail('${report.id}')"><i class="fas fa-sticky-note"></i> ${report.description.substring(0, 50)}...</div>`;
         }
       });
+      html += `</div>`;
+    }
+    
+    if (step.completedAt) {
+      html += `<small><i class="far fa-calendar"></i> Complété le ${formatDate(step.completedAt)}</small>`;
+    }
+    if (step.validatedAt) {
+      html += `<small><i class="fas fa-check-circle" style="color:var(--success);"></i> Validé le ${formatDate(step.validatedAt)}</small>`;
+    }
+    
+    html += `</div>`;
+  });
+  
+  html += `</div>`;
+  content.innerHTML = html;
+  
+  // Événements checkboxes
+  content.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
+    cb.addEventListener('change', function(e) {
+      e.stopPropagation();
+      const motorId = this.dataset.motorId;
+      const stepId = this.dataset.stepId;
+      const substepIndex = parseInt(this.dataset.substepIndex);
+      const isChecked = this.checked;
+      
+      updateMotorSubstep(motorId, stepId, substepIndex, isChecked);
+      showNotification(isChecked ? 'Sous-étape complétée' : 'Sous-étape décochée', 'info');
+      
+      const updatedMotor = getMotorById(motorId);
+      const step = updatedMotor.steps.find(s => s.id === stepId);
+      
+      if (step && step.completed && !step.validated) {
+        setTimeout(() => {
+          showPopup({
+            title: 'Demande validation',
+            message: `L'étape "${step.name}" est complète. Pensez à envoyer un rapport avec photos. Demander validation admin ?`,
+            icon: 'check-circle',
+            confirmText: 'Demander',
+            cancelText: 'Plus tard',
+            onConfirm: () => { showNotification('Demande envoyée', 'success'); viewMotorDetail(motorId); },
+            onCancel: () => { viewMotorDetail(motorId); }
+          });
+        }, 100);
+      } else {
+        viewMotorDetail(motorId);
+      }
     });
-  };
+  });
+  
+  // Événements boutons rapport
+  content.querySelectorAll('.send-report-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const motorId = this.dataset.motorId;
+      const stepId = this.dataset.stepId;
+      const stepName = this.dataset.stepName;
+      showReportForm(motorId, stepId, stepName);
+    });
+  });
+};
+// === FONCTIONS RAPPORTS AVEC PHOTOS ===
 
+function showReportForm(motorId, stepId, stepName) {
+  const motor = getMotorById(motorId);
+  
+  const formHtml = `
+    <div style="max-height: 500px; overflow-y: auto;">
+      <div class="report-form-section">
+        <h4 style="color: var(--primary); margin-bottom: 10px;">Rapport pour : ${stepName}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+          Moteur : ${motor?.clientName || '-'} | ${motor?.power || '-'} kW
+        </p>
+      </div>
+      
+      <div class="form-field">
+        <label>Description du rapport</label>
+        <textarea id="reportDescription" rows="4" placeholder="Décrivez ce qui a été fait, observations, mesures..."></textarea>
+      </div>
+      
+      <div class="form-field">
+        <label>Photos (max 5)</label>
+        <div class="photo-upload-area" id="photoUploadArea">
+          <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+          <div class="upload-placeholder" onclick="document.getElementById('photoInput').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Cliquez pour ajouter des photos</p>
+            <small>JPG, PNG - Max 5 photos</small>
+          </div>
+        </div>
+        <div class="photo-previews" id="photoPreviews"></div>
+      </div>
+      
+      <div class="form-field">
+        <label>Mesures relevées (optionnel)</label>
+        <textarea id="reportMeasurements" rows="3" placeholder="Résistance : ...&#10;Isolement : ...&#10;Courant : ..."></textarea>
+      </div>
+    </div>
+  `;
+  
+  showPopup({
+    title: 'Envoyer un rapport',
+    message: formHtml,
+    icon: 'camera',
+    confirmText: 'Envoyer le rapport',
+    cancelText: 'Annuler',
+    onConfirm: () => {
+      const description = document.getElementById('reportDescription')?.value;
+      const measurements = document.getElementById('reportMeasurements')?.value;
+      const photoPreviews = document.querySelectorAll('#photoPreviews img');
+      
+      if (!description && photoPreviews.length === 0) {
+        showNotification('Veuillez ajouter une description ou au moins une photo', 'warning');
+        return false;
+      }
+      
+      // Récupérer les photos en base64
+      const photos = [];
+      photoPreviews.forEach(img => {
+        photos.push(img.src);
+      });
+      
+      const user = getCurrentUser();
+      const motor = getMotorById(motorId);
+      
+      const report = {
+        motorId: motorId,
+        stepId: stepId,
+        stepName: stepName,
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        motorClient: motor?.clientName || '',
+        motorPower: motor?.power || '',
+        motorType: motor?.motorType || '',
+        description: description,
+        measurements: measurements,
+        photos: photos,
+        status: 'unread'
+      };
+      
+      saveReport(report);
+      showNotification('Rapport envoyé avec succès !', 'success');
+      viewMotorDetail(motorId);
+      return true;
+    }
+  });
+  
+  // Gestionnaire d'upload de photos
+  setTimeout(() => {
+    const photoInput = document.getElementById('photoInput');
+    const photoPreviews = document.getElementById('photoPreviews');
+    let selectedPhotos = [];
+    
+    photoInput?.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      
+      if (selectedPhotos.length + files.length > 5) {
+        showNotification('Maximum 5 photos autorisées', 'warning');
+        return;
+      }
+      
+      files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          showNotification(`La photo ${file.name} dépasse 5MB`, 'warning');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          selectedPhotos.push(event.target.result);
+          renderPhotoPreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    function renderPhotoPreviews() {
+      photoPreviews.innerHTML = selectedPhotos.map((photo, index) => `
+        <div class="photo-preview-item">
+          <img src="${photo}" alt="Photo ${index + 1}">
+          <button type="button" class="remove-photo-btn" onclick="removePhoto(${index})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    window.removePhoto = function(index) {
+      selectedPhotos.splice(index, 1);
+      renderPhotoPreviews();
+    };
+  }, 100);
+}
+
+window.viewReportDetail = function(reportId) {
+  const report = getReportById(reportId);
+  if (!report) return;
+  
+  const motor = getMotorById(report.motorId);
+  
+  let html = `
+    <div style="max-height: 500px; overflow-y: auto;">
+      <div class="report-detail-header">
+        <h4 style="color: var(--primary);">Rapport - ${report.stepName}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Moteur : ${motor?.clientName || report.motorClient} | ${motor?.power || report.motorPower} kW<br>
+          Envoyé par : ${report.userName} | ${formatDate(report.createdAt)}
+        </p>
+      </div>
+      
+      ${report.description ? `
+        <div class="report-section">
+          <h5>Description</h5>
+          <p>${report.description}</p>
+        </div>
+      ` : ''}
+      
+      ${report.measurements ? `
+        <div class="report-section">
+          <h5>Mesures</h5>
+          <pre style="white-space: pre-wrap; font-family: inherit;">${report.measurements}</pre>
+        </div>
+      ` : ''}
+      
+      ${report.photos && report.photos.length > 0 ? `
+        <div class="report-section">
+          <h5>Photos (${report.photos.length})</h5>
+          <div class="report-photos-grid">
+            ${report.photos.map(photo => `
+              <img src="${photo}" class="report-full-photo" onclick="window.open('${photo}')">
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      <div class="report-status">
+        Statut : <span class="badge ${report.status === 'approved' ? 'success' : report.status === 'unread' ? 'warning' : ''}">
+          ${report.status === 'approved' ? 'Approuvé' : report.status === 'unread' ? 'Non lu' : 'Lu'}
+        </span>
+      </div>
+    </div>
+  `;
+  
+  showPopup({
+    title: 'Détail du rapport',
+    message: html,
+    icon: 'file-alt',
+    confirmText: 'Fermer',
+    cancelText: null
+  });
+};
 
 function loadMotorTemplates() {
   const s = document.getElementById("motorTemplate");
@@ -578,6 +794,15 @@ function initAdminPage() {
     setActiveNav("navAdminCompleted");
     showAdminView("completed");
   });
+
+  document.getElementById("navAdminReports")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setActiveNav("navAdminReports");
+    showAdminView("reports");
+  });
+  
+  document.getElementById('reportFilterStatus')?.addEventListener('change', loadReportsList);
+
   document.getElementById("adminLogoutBtn")?.addEventListener("click", (e) => {
     e.preventDefault();
     logout();
@@ -655,6 +880,7 @@ function showAdminView(view) {
     "motorsManagementView",
     "completedMotorsView",
     "motorTypesManagementView",
+    "reportsManagementView"
   ].forEach((v) => document.getElementById(v)?.classList.remove("active"));
   
   if (view === "dashboard") {
@@ -669,6 +895,9 @@ function showAdminView(view) {
   } else if (view === "completed") {
     document.getElementById("completedMotorsView")?.classList.add("active");
     loadCompletedMotors();
+  } else if (view === "reports") {
+    document.getElementById("reportsManagementView")?.classList.add("active");
+    loadReportsList();
   } else if (view === "motorTypes") {
     document.getElementById("motorTypesManagementView")?.classList.add("active");
     loadMotorTypesList();
@@ -679,6 +908,7 @@ function showAdminView(view) {
     document.getElementById("adminMotorDetailView")?.classList.add("active");
   }
 }
+
 function loadCompletedMotors() {
   const motors = getMotors().filter(m => m.status === 'completed');
   const tbody = document.getElementById('completedMotorsList');
@@ -1119,6 +1349,9 @@ function loadAdminStats() {
       } else if (label === 'Terminés') {
         setActiveNav('navAdminCompleted');
         showAdminView('completed');
+      } else if (view === "reports") {
+        document.getElementById("reportsManagementView")?.classList.add("active");
+        loadReportsList();
       }
     });
   });
@@ -1167,6 +1400,106 @@ function loadAdminStats() {
       : "<p style='padding:20px;'>Aucune activité</p>";
   }
 }
+
+function loadReportsList() {
+  const filter = document.getElementById('reportFilterStatus')?.value || 'all';
+  let reports = getReports();
+  if (filter !== 'all') reports = reports.filter(r => r.status === filter);
+  
+  const container = document.getElementById('reportsList');
+  if (!container) return;
+  
+  if (reports.length === 0) {
+    container.innerHTML = '<p style="text-align:center;padding:40px;">Aucun rapport</p>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="reports-cards">
+      ${reports.map(r => {
+        const motor = getMotorById(r.motorId);
+        const photoCount = r.photos?.length || 0;
+        
+        return `
+          <div class="report-card ${r.status === 'unread' ? 'unread' : ''}">
+            <div class="report-card-header">
+              <div>
+                <h4><i class="fas fa-file-alt"></i> ${r.stepName}</h4>
+                <p>Moteur : ${motor?.clientName || r.motorClient} (${motor?.power || r.motorPower} kW)</p>
+              </div>
+              <span class="badge ${r.status === 'approved' ? 'success' : r.status === 'unread' ? 'warning' : ''}">
+                ${r.status === 'approved' ? 'Approuvé' : r.status === 'unread' ? 'Non lu' : 'Lu'}
+              </span>
+            </div>
+            <div class="report-card-body">
+              <p><strong>Technicien :</strong> ${r.userName} (${r.userEmail})</p>
+              <p><strong>Date :</strong> ${formatDate(r.createdAt)}</p>
+              ${r.description ? `<p><strong>Description :</strong> ${r.description.substring(0, 100)}...</p>` : ''}
+              ${photoCount > 0 ? `<p><i class="fas fa-image"></i> ${photoCount} photo(s) jointe(s)</p>` : ''}
+            </div>
+            ${r.photos && r.photos.length > 0 ? `
+              <div class="report-card-photos">
+                ${r.photos.slice(0, 3).map(p => `<img src="${p}" class="report-mini-thumb" onclick="viewReportDetail('${r.id}')">`).join('')}
+                ${r.photos.length > 3 ? `<span class="more-photos">+${r.photos.length - 3}</span>` : ''}
+              </div>
+            ` : ''}
+            <div class="report-card-actions">
+              <button class="cyber-button small" onclick="viewReportDetail('${r.id}')">
+                <i class="fas fa-eye"></i> Voir détails
+              </button>
+              ${r.status === 'unread' ? `
+                <button class="cyber-button small success" onclick="markReportRead('${r.id}')">
+                  <i class="fas fa-check"></i> Marquer lu
+                </button>
+              ` : ''}
+              ${r.status !== 'approved' ? `
+                <button class="cyber-button small" onclick="approveReport('${r.id}')">
+                  <i class="fas fa-check-double"></i> Approuver
+                </button>
+              ` : ''}
+              <button class="action-btn delete-report" data-id="${r.id}" title="Supprimer">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  
+  // Événements
+  container.querySelectorAll('.delete-report').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showPopup({
+        title: 'Supprimer le rapport',
+        message: 'Voulez-vous vraiment supprimer ce rapport ?',
+        icon: 'trash',
+        confirmText: 'Supprimer',
+        onConfirm: () => {
+          deleteReport(btn.dataset.id);
+          showNotification('Rapport supprimé', 'success');
+          loadReportsList();
+        }
+      });
+    });
+  });
+}
+
+window.markReportRead = function(reportId) {
+  updateReport(reportId, { status: 'read' });
+  showNotification('Rapport marqué comme lu', 'success');
+  loadReportsList();
+  loadAdminStats();
+};
+
+window.approveReport = function(reportId) {
+  updateReport(reportId, { status: 'approved' });
+  showNotification('Rapport approuvé', 'success');
+  loadReportsList();
+  loadAdminStats();
+};
+
 
 function loadUsersList() {
   const users = getUsers().filter((u) => u.role === "user"),

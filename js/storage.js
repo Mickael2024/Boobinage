@@ -695,3 +695,52 @@ function initializeDefaultMotorTypes() {
     defaultTypes.forEach(type => saveMotorType(type));
   }
 }
+
+// === RAPPORTS AVEC PHOTOS ===
+function getReports() {
+  return JSON.parse(localStorage.getItem('fortico_reports') || '[]');
+}
+
+function getReportById(id) {
+  return getReports().find(r => r.id === id);
+}
+
+function saveReport(report) {
+  const reports = getReports();
+  report.id = 'report_' + Date.now();
+  report.createdAt = new Date().toISOString();
+  report.status = 'unread'; // unread, read, approved, rejected
+  reports.unshift(report);
+  localStorage.setItem('fortico_reports', JSON.stringify(reports));
+  addActivity({ 
+    type: 'report_created', 
+    userId: report.userId, 
+    motorId: report.motorId, 
+    description: `Rapport envoyé pour l'étape "${report.stepName}" du moteur ${report.motorClient || ''}` 
+  });
+  return report;
+}
+
+function updateReport(reportId, updates) {
+  const reports = getReports();
+  const index = reports.findIndex(r => r.id === reportId);
+  if (index !== -1) {
+    reports[index] = { ...reports[index], ...updates, updatedAt: new Date().toISOString() };
+    localStorage.setItem('fortico_reports', JSON.stringify(reports));
+    return reports[index];
+  }
+  return null;
+}
+
+function deleteReport(reportId) {
+  const reports = getReports().filter(r => r.id !== reportId);
+  localStorage.setItem('fortico_reports', JSON.stringify(reports));
+}
+
+function getReportsByMotor(motorId) {
+  return getReports().filter(r => r.motorId === motorId);
+}
+
+function getReportsByUser(userId) {
+  return getReports().filter(r => r.userId === userId);
+}
