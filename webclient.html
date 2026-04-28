@@ -306,7 +306,7 @@
             box-shadow: var(--shadow-lg); min-height: 400px;
         }
         .map-container iframe {
-            width: 100%; height: 400px; border: none;
+            width: 100%; height: -webkit-fill-available; border: none;
         }
 
         /* Footer */
@@ -399,6 +399,327 @@
 }
 .nav-links a.btn-nav.active::after {
     display: none;
+}
+/* ========== MODE SOMBRE ========== */
+body.dark-mode {
+    --bg-light: #1a1d23;
+    --bg-white: #21252b;
+    --bg-gray: #2c313a;
+    --text-dark: #e1e4e8;
+    --text-secondary: #8b949e;
+    --border-light: #30363d;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+    --shadow-xl: 0 20px 50px rgba(0,0,0,0.6);
+    background-color: #1a1d23;
+    color: #e1e4e8;
+}
+
+/* Header en mode sombre */
+body.dark-mode .navbar {
+    background: rgba(33, 37, 43, 0.97);
+    border-bottom: 1px solid var(--border-light);
+}
+
+body.dark-mode .nav-logo {
+    color: #e1e4e8;
+}
+
+body.dark-mode .nav-links a {
+    color: #8b949e;
+}
+
+body.dark-mode .nav-links a:hover {
+    color: var(--primary);
+}
+
+body.dark-mode .nav-toggle span {
+    background: #e1e4e8;
+}
+
+/* Hero - garder le fond sombre naturellement */
+body.dark-mode .hero {
+    background: linear-gradient(135deg, rgba(10, 15, 25, 0.95) 0%, rgba(15, 20, 35, 0.9) 100%),
+                url('https://images.unsplash.com/photo-1581091870627-3d3c1f7a0c66?w=1920&q=80') center/cover no-repeat;
+}
+
+/* Stats */
+body.dark-mode .stat-item {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-lg);
+}
+
+body.dark-mode .stat-item h3 {
+    color: var(--primary);
+}
+
+body.dark-mode .stat-item p {
+    color: var(--text-secondary);
+}
+
+/* Services cards */
+body.dark-mode .service-card {
+    background: var(--bg-white);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+body.dark-mode .service-card h3 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .service-card p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .service-card:hover {
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary);
+}
+
+/* Pourquoi nous */
+body.dark-mode #why-us {
+    background: var(--bg-light);
+}
+
+body.dark-mode .why-content h2 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .why-list li {
+    border-bottom-color: var(--border-light);
+}
+
+body.dark-mode .why-list li span {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .why-list li strong {
+    color: var(--text-dark);
+}
+
+/* Témoignages */
+body.dark-mode .testimonial-card {
+    background: var(--bg-white);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+body.dark-mode .testimonial-card p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .testimonial-card .stars {
+    color: var(--accent);
+}
+
+body.dark-mode .testimonial-author strong {
+    color: var(--text-dark);
+}
+
+body.dark-mode .testimonial-author small {
+    color: var(--text-secondary);
+}
+
+/* Formulaire */
+body.dark-mode .form-section-bg {
+    background: var(--bg-light);
+}
+
+body.dark-mode .request-form {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-lg);
+}
+
+body.dark-mode .form-group label {
+    color: var(--text-dark);
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: var(--bg-gray);
+    border-color: var(--border-light);
+    color: var(--text-dark);
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .form-group textarea:focus {
+    background: var(--bg-white);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2);
+}
+
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder {
+    color: #6c757d;
+}
+
+body.dark-mode .form-section-title {
+    color: var(--primary);
+    border-bottom-color: var(--border-light);
+}
+
+/* Contact */
+body.dark-mode .contact-info h3 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .contact-info p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .contact-item {
+    background: var(--bg-white);
+}
+
+body.dark-mode .contact-item:hover {
+    background: var(--bg-gray);
+}
+
+body.dark-mode .contact-item strong {
+    color: var(--text-dark);
+}
+
+body.dark-mode .contact-item span {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .contact-item a {
+    color: var(--primary);
+}
+
+/* Google Maps */
+body.dark-mode .map-container {
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
+}
+
+/* FAQ */
+body.dark-mode .faq-item {
+    border-color: var(--border-light);
+}
+
+body.dark-mode .faq-btn {
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+
+body.dark-mode .faq-content {
+    color: var(--text-secondary);
+}
+
+/* Problèmes */
+body.dark-mode .problem-card {
+    background: var(--bg-white);
+    box-shadow: var(--shadow);
+}
+
+body.dark-mode .problem-card h4 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .problem-card p {
+    color: var(--text-secondary);
+}
+
+/* Calculateur */
+body.dark-mode .calculator-card {
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+
+body.dark-mode .calculator-card .form-field label {
+    color: var(--text-dark);
+}
+
+body.dark-mode .calculator-card input {
+    background: var(--bg-gray);
+    border-color: var(--border-light);
+    color: var(--text-dark);
+}
+
+body.dark-mode .result-box {
+    background: var(--bg-gray);
+}
+
+/* Clients */
+body.dark-mode #clients {
+    background: var(--bg-white);
+}
+
+body.dark-mode .clients-grid div {
+    color: var(--text-dark) !important;
+    opacity: 0.5;
+}
+
+/* Footer */
+body.dark-mode .footer {
+    background: #161b22;
+}
+
+body.dark-mode .footer-bottom {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Toast */
+body.dark-mode .toast {
+    background: var(--bg-white);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Nav links mobile */
+body.dark-mode .nav-links {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Sticky CTA */
+body.dark-mode #stickyCta {
+    background: var(--primary-dark);
+}
+
+/* WhatsApp float */
+body.dark-mode .whatsapp-float {
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.6);
+}
+
+/* Scrollbar */
+body.dark-mode::-webkit-scrollbar {
+    width: 10px;
+}
+
+body.dark-mode::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+body.dark-mode::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 5px;
+}
+
+body.dark-mode::-webkit-scrollbar-thumb:hover {
+    background: #5a6578;
+}
+
+/* Section sombre déjà existante - ne pas modifier */
+body.dark-mode .section-dark {
+    background: #0d1117;
+}
+
+/* Animations reveal */
+body.dark-mode .reveal {
+    /* Garder les animations normales */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    body.dark-mode .nav-links {
+        background: var(--bg-white);
+    }
 }
     </style>
 </head>
@@ -559,6 +880,37 @@
                     <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
                     <p>"Suivi rigoureux via leur plateforme en ligne. On sait exactement où en est la réparation."</p>
                     <div class="testimonial-author"><div class="avatar">MR</div><div><strong>Marie Robert </strong><small>Ingénieure process, Sanofi</small></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="problems">
+        <div class="section-container">
+            <div class="section-header reveal">
+                <h2>Problèmes Fréquents</h2>
+                <p>Reconnaissez les signes avant la panne complète</p>
+            </div>
+            <div class="problems-grid reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
+                <div class="problem-card" style="background:white;padding:24px;border-radius:16px;box-shadow:var(--shadow);border-left:4px solid var(--danger);">
+                    <i class="fas fa-fire" style="font-size:30px;color:var(--danger);margin-bottom:12px;"></i>
+                    <h4>Odeur de brûlé</h4>
+                    <p style="color:var(--text-secondary);">Surchauffe des enroulements, risque de court-circuit imminent.</p>
+                </div>
+                <div class="problem-card" style="background:white;padding:24px;border-radius:16px;box-shadow:var(--shadow);border-left:4px solid var(--warning);">
+                    <i class="fas fa-volume-up" style="font-size:30px;color:var(--warning);margin-bottom:12px;"></i>
+                    <h4>Bruit anormal</h4>
+                    <p style="color:var(--text-secondary);">Roulements usés, déséquilibre du rotor, frottements mécaniques.</p>
+                </div>
+                <div class="problem-card" style="background:white;padding:24px;border-radius:16px;box-shadow:var(--shadow);border-left:4px solid var(--primary);">
+                    <i class="fas fa-power-off" style="font-size:30px;color:var(--primary);margin-bottom:12px;"></i>
+                    <h4>Ne démarre plus</h4>
+                    <p style="color:var(--text-secondary);">Bobine coupée, condensateur HS, problème d'alimentation.</p>
+                </div>
+                <div class="problem-card" style="background:white;padding:24px;border-radius:16px;box-shadow:var(--shadow);border-left:4px solid var(--info);">
+                    <i class="fas fa-tint" style="font-size:30px;color:#00aaff;margin-bottom:12px;"></i>
+                    <h4>Humidité / Rouille</h4>
+                    <p style="color:var(--text-secondary);">Infiltration d'eau, isolation dégradée, risque d'électrocution.</p>
                 </div>
             </div>
         </div>
@@ -831,7 +1183,65 @@
             }
         });
     });
-
+// Toggle dark mode
+// ========== MODE SOMBRE ==========
+(function() {
+    // Créer le bouton de toggle
+    const darkToggle = document.createElement('button');
+    darkToggle.id = 'darkModeToggle';
+    darkToggle.setAttribute('title', 'Mode sombre / Mode clair');
+    darkToggle.setAttribute('aria-label', 'Basculer le mode sombre');
+    darkToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    darkToggle.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 999;
+        font-size: 20px;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    document.body.appendChild(darkToggle);
+    
+    // Vérifier la préférence enregistrée
+    const savedMode = localStorage.getItem('fortico_dark_mode');
+    if (savedMode === 'true') {
+        document.body.classList.add('dark-mode');
+        darkToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    
+    // Toggle au clic
+    darkToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        darkToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        localStorage.setItem('fortico_dark_mode', isDark);
+        
+        // Animation
+        darkToggle.style.transform = 'scale(0.8)';
+        setTimeout(() => {
+            darkToggle.style.transform = 'scale(1)';
+        }, 150);
+    });
+    
+    // Effet hover
+    darkToggle.addEventListener('mouseenter', () => {
+        darkToggle.style.transform = 'scale(1.1)';
+    });
+    darkToggle.addEventListener('mouseleave', () => {
+        darkToggle.style.transform = 'scale(1)';
+    });
+})();
     // ========== INITIALISATION ==========
     console.log('🚀 Fortico Rewind - Plateforme Web initialisée');
     console.log('📋 Demandes stockées dans localStorage: fortico_web_requests');
