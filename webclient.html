@@ -99,7 +99,7 @@
             padding: 120px 24px 80px;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(29, 53, 87, 0.192) 0%, rgba(6, 28, 58, 0.164) 100%),
+            background: linear-gradient(135deg, rgba(29, 53, 87, 0.623) 0%, rgba(6, 28, 58, 0.527) 100%),
                         url('https://plus.unsplash.com/premium_photo-1677009835876-4a29ddc4cc2c?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover no-repeat;
         }
         .hero::before {
@@ -109,27 +109,33 @@
             background: radial-gradient(circle, rgba(230,57,70,0.15) 0%, transparent 70%);
             border-radius: 50%;
         }
+
         .hero-container {
             max-width: 1280px; margin: 0 auto;
             display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
             align-items: center; position: relative; z-index: 1;
         }
+
         .hero-content h1 {
             font-size: 3.2rem; font-weight: 800; line-height: 1.15;
             color: white; margin-bottom: 20px;
         }
+
         .hero-content h1 span { color: var(--accent); }
         .hero-content p {
             font-size: 1.2rem; color: rgba(255,255,255,0.85);
             margin-bottom: 32px; max-width: 500px;
         }
+
         .hero-features {
             display: flex; gap: 20px; margin-bottom: 32px; flex-wrap: wrap;
         }
+
         .hero-feature {
             display: flex; align-items: center; gap: 8px;
             color: rgba(255,255,255,0.9); font-size: 0.95rem;
         }
+
         .hero-feature i { color: var(--success); font-size: 18px; }
         .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
         .btn-primary-hero {
@@ -137,7 +143,7 @@
             padding: 16px 32px; border: none; border-radius: 50px;
             font-weight: 700; font-size: 1rem; cursor: pointer;
             text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
-            transition: all 0.2s; box-shadow: 0 8px 20px rgba(230,57,70,0.3);
+            transition: all 0.2s; box-shadow: 0 8px 20px rgb(0 0 0 / 30%);
         }
         .btn-primary-hero:hover { background: var(--primary-dark); transform: translateY(-3px); }
         .btn-outline-hero {
@@ -369,6 +375,31 @@
             .map-container { min-height: 300px; }
             .map-container iframe { height: 300px; }
         }
+        /* Style pour le lien actif dans la navigation */
+.nav-links a.active {
+    color: var(--primary) !important;
+    font-weight: 600 !important;
+    position: relative;
+}
+
+.nav-links a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Exception pour le bouton CTA */
+.nav-links a.btn-nav.active {
+    color: white !important;
+}
+.nav-links a.btn-nav.active::after {
+    display: none;
+}
     </style>
 </head>
 <body>
@@ -612,69 +643,199 @@
     </footer>
 
     <script src="js/storage.js"></script>
-    <script>
-        initializeStorage();
-        initializeDefaultMotorTypes();
+<script>
+    initializeStorage();
+    initializeDefaultMotorTypes();
 
-        window.addEventListener('load', () => setTimeout(() => document.querySelector('.page-loader').classList.add('hidden'), 600));
+    // ========== LOADER ==========
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.querySelector('.page-loader').classList.add('hidden');
+        }, 600);
+    });
 
-        const navbar = document.getElementById('navbar');
-        const navToggle = document.getElementById('navToggle');
-        const navLinks = document.getElementById('navLinks');
+    // ========== NAVIGATION ==========
+    const navbar = document.getElementById('navbar');
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    const navLinksAll = navLinks.querySelectorAll('a');
 
-        window.addEventListener('scroll', () => {
-            navbar.classList.toggle('scrolled', window.scrollY > 50);
+    // Effet scroll sur la navbar
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+        
+        // Mise à jour du lien actif dans la navigation
+        updateActiveNavLink();
+    });
+
+    // Menu mobile toggle
+    navToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
+
+    // Fermer le menu mobile au clic sur un lien
+    navLinksAll.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+        });
+    });
+
+    // ========== DÉTECTION DE LA SECTION ACTIVE POUR LA NAV ==========
+    function updateActiveNavLink() {
+        const sections = document.querySelectorAll('section[id]');
+        const scrollPosition = window.scrollY + 100;
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                // Retirer la classe active de tous les liens
+                navLinksAll.forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Ajouter la classe active au lien correspondant
+                const activeLink = navLinks.querySelector(`a[href="#${sectionId}"]`);
+                if (activeLink && !activeLink.classList.contains('btn-nav')) {
+                    activeLink.classList.add('active');
+                    activeLink.style.color = 'var(--primary)';
+                    activeLink.style.fontWeight = '600';
+                }
+            } else {
+                // Réinitialiser le style des liens inactifs
+                const inactiveLink = navLinks.querySelector(`a[href="#${sectionId}"]`);
+                if (inactiveLink && !inactiveLink.classList.contains('btn-nav')) {
+                    inactiveLink.style.color = '';
+                    inactiveLink.style.fontWeight = '';
+                }
+            }
         });
 
-        navToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
-        navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => navLinks.classList.remove('active')));
-
-        function revealOnScroll() {
-            document.querySelectorAll('.reveal').forEach(el => {
-                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active');
+        // Gérer le cas où on est tout en haut (section home)
+        if (window.scrollY < 100) {
+            navLinksAll.forEach(link => {
+                if (!link.classList.contains('btn-nav')) {
+                    link.classList.remove('active');
+                    link.style.color = '';
+                    link.style.fontWeight = '';
+                }
             });
+            const homeLink = navLinks.querySelector('a[href="#home"]');
+            if (homeLink) {
+                homeLink.classList.add('active');
+                homeLink.style.color = 'var(--primary)';
+                homeLink.style.fontWeight = '600';
+            }
         }
-        window.addEventListener('scroll', revealOnScroll);
-        window.addEventListener('load', revealOnScroll);
-        revealOnScroll();
+    }
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'}"></i><span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 5000);
-        }
-
-        document.getElementById('requestForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const request = {
-                id: 'req_' + Date.now(),
-                clientName: document.getElementById('reqName').value,
-                clientEmail: document.getElementById('reqEmail').value,
-                clientPhone: document.getElementById('reqPhone').value,
-                clientCompany: document.getElementById('reqCompany').value,
-                clientAddress: document.getElementById('reqAddress').value,
-                motorType: document.getElementById('reqMotorType').value,
-                power: document.getElementById('reqPower').value,
-                voltage: document.getElementById('reqVoltage').value,
-                current: document.getElementById('reqCurrent').value,
-                frequency: document.getElementById('reqFrequency').value,
-                rpm: document.getElementById('reqRpm').value,
-                insulationClass: document.getElementById('reqInsulation').value,
-                couplingType: document.getElementById('reqCoupling').value,
-                description: document.getElementById('reqDescription').value,
-                createdAt: new Date().toISOString(),
-                status: 'new'
-            };
-            const requests = JSON.parse(localStorage.getItem('fortico_web_requests') || '[]');
-            requests.push(request);
-            localStorage.setItem('fortico_web_requests', JSON.stringify(requests));
-            showToast('Devis demandé avec succès ! Réponse sous 24h.', 'success');
-            this.reset();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+    // ========== SCROLL REVEAL ANIMATION ==========
+    function revealOnScroll() {
+        const elements = document.querySelectorAll('.reveal');
+        const windowHeight = window.innerHeight;
+        
+        elements.forEach(el => {
+            const elementTop = el.getBoundingClientRect().top;
+            const revealPoint = 100;
+            
+            if (elementTop < windowHeight - revealPoint) {
+                el.classList.add('active');
+            }
         });
-    </script>
+    }
+
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
+    // Appel initial
+    revealOnScroll();
+    updateActiveNavLink();
+
+    // ========== TOAST NOTIFICATION ==========
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icons = { success: 'check-circle', error: 'times-circle' };
+        toast.innerHTML = `<i class="fas fa-${icons[type]}"></i><span>${message}</span>`;
+        container.appendChild(toast);
+        
+        // Animation de sortie
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(30px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    // ========== FORMULAIRE DEVIS ==========
+    document.getElementById('requestForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const request = {
+            id: 'req_' + Date.now(),
+            clientName: document.getElementById('reqName').value,
+            clientEmail: document.getElementById('reqEmail').value,
+            clientPhone: document.getElementById('reqPhone').value,
+            clientCompany: document.getElementById('reqCompany').value,
+            clientAddress: document.getElementById('reqAddress').value,
+            motorType: document.getElementById('reqMotorType').value,
+            power: document.getElementById('reqPower').value,
+            voltage: document.getElementById('reqVoltage').value,
+            current: document.getElementById('reqCurrent').value,
+            frequency: document.getElementById('reqFrequency').value,
+            rpm: document.getElementById('reqRpm').value,
+            insulationClass: document.getElementById('reqInsulation').value,
+            couplingType: document.getElementById('reqCoupling').value,
+            description: document.getElementById('reqDescription').value,
+            createdAt: new Date().toISOString(),
+            status: 'new'
+        };
+        
+        // Sauvegarder dans localStorage
+        const requests = JSON.parse(localStorage.getItem('fortico_web_requests') || '[]');
+        requests.push(request);
+        localStorage.setItem('fortico_web_requests', JSON.stringify(requests));
+        
+        // Notification
+        showToast('✅ Demande de devis envoyée avec succès ! Nous vous contacterons dans les 24h.', 'success');
+        
+        // Réinitialiser le formulaire
+        this.reset();
+        
+        // Remonter en haut
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ========== DÉFILAGE DOUX POUR LES LIENS D'ANCRAGE ==========
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                const offsetTop = targetElement.offsetTop - 80; // Décalage pour la navbar fixe
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // ========== INITIALISATION ==========
+    console.log('🚀 Fortico Rewind - Plateforme Web initialisée');
+    console.log('📋 Demandes stockées dans localStorage: fortico_web_requests');
+    console.log('📍 Navigation active et animations scroll activées');
+</script>
 </body>
 </html>
