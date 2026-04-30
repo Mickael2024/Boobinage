@@ -1637,3 +1637,84 @@ body {
   background: var(--success);
   color: white;
 }
+/* Messages / Demandes de devis */
+.messages-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.message-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.message-card.unread {
+  border-left: 4px solid var(--warning);
+  background: #fffbeb;
+}
+
+body.dark-mode .message-card.unread {
+  background: #2d2410;
+  border-left-color: var(--warning);
+}
+
+.message-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.message-card-header h4 {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-card-header p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.message-card-body {
+  margin-bottom: 16px;
+}
+
+.message-card-body p {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.message-card-body strong {
+  color: var(--text-dark);
+}
+
+.message-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.cyber-button.small.success {
+  background: var(--success);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .message-card-actions {
+    flex-direction: column;
+  }
+  .message-card-actions .cyber-button,
+  .message-card-actions a.cyber-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

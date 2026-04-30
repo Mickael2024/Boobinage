@@ -24,6 +24,7 @@
         <li><a href="#" id="navAdminCompleted"><i class="fas fa-check-circle"></i>MOTEURS TERMINÉS</a></li>
         <li><a href="#" id="navAdminMotorTypes"><i class="fas fa-cubes"></i>TYPES MOTEURS</a></li>
         <li><a href="#" id="navAdminReports"><i class="fas fa-file-alt"></i>RAPPORTS</a></li>
+        <li><a href="#" id="navAdminMessages"><i class="fas fa-envelope"></i>MESSAGES</a></li>
         <li><a href="#" id="navAdminProfile"><i class="fas fa-user-shield"></i>PROFIL ADMIN</a></li>
         <li><a href="#" id="adminLogoutBtn"><i class="fas fa-power-off"></i>DÉCONNEXION</a></li>
       </ul>
@@ -43,7 +44,25 @@
         </form>
       </div>
     </div>
-
+<!-- Gestion des Messages / Demandes de devis -->
+<div id="messagesManagementView" class="management-wrapper">
+  <div class="management-header">
+    <h2><i class="fas fa-envelope"></i> DEMANDES DE DEVIS (WEB)</h2>
+    <div class="filter-controls">
+      <select id="messageFilterStatus" class="cyber-select">
+        <option value="all">Tous les statuts</option>
+        <option value="new">Nouveaux</option>
+        <option value="read">Lus</option>
+        <option value="replied">Répondus</option>
+        <option value="archived">Archivés</option>
+      </select>
+      <button class="cyber-button" id="refreshMessagesBtn">
+        <i class="fas fa-sync-alt"></i><span>ACTUALISER</span>
+      </button>
+    </div>
+  </div>
+  <div id="messagesList" class="table-container"></div>
+</div>
     <!-- Dashboard -->
     <div id="adminDashboardView" class="dashboard-wrapper">
       <div class="dashboard-header"><div class="welcome-section"><h2>SUPERVISION</h2><p>Vue d'ensemble du système</p></div><button class="cyber-button" id="refreshDashboardBtn"><i class="fas fa-sync-alt"></i><span>ACTUALISER</span></button></div>
@@ -165,13 +184,15 @@
       </div>
     </div>
   </div>
-
   <div id="notification-container"></div>
   <div id="popup-container"></div>
-
-  <script src="js/storage.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
+  <!-- <script type="module" src="./js/firebase-config.js"></script>
+  <script src="./js/storage-firebase.js"></script>
+  <script src="./js/auth-firebase.js"></script>
+  <script src="./js/app-firebase.js"></script> -->
+  <!-- UN SEUL FICHIER au lieu de 4 -->
+<script src="js/all-firebase.js"></script>
+<script src="js/app-firebase.js"></script>
   <script>document.addEventListener('DOMContentLoaded', () => { initializeStorage(); initializeDefaultMotorTypes(); initAdminPage(); });</script>
 </body>
 </html>

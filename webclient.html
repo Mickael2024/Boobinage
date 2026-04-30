@@ -993,259 +993,198 @@ body.dark-mode .reveal {
         </div>
         <div class="footer-bottom"><p>&copy; 2026 Jeff Elec. Tous droits réservés. | <a href="#" style="color: var(--accent);">Confidentialité</a></p></div>
     </footer>
-
-    <script src="js/storage.js"></script>
-<script>
-    initializeStorage();
-    initializeDefaultMotorTypes();
-
-    // ========== LOADER ==========
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.querySelector('.page-loader').classList.add('hidden');
-        }, 600);
-    });
-
-    // ========== NAVIGATION ==========
-    const navbar = document.getElementById('navbar');
-    const navToggle = document.getElementById('navToggle');
-    const navLinks = document.getElementById('navLinks');
-    const navLinksAll = navLinks.querySelectorAll('a');
-
-    // Effet scroll sur la navbar
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-        
-        // Mise à jour du lien actif dans la navigation
-        updateActiveNavLink();
-    });
-
-    // Menu mobile toggle
-    navToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
-
-    // Fermer le menu mobile au clic sur un lien
-    navLinksAll.forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyBP5qlIhgbVIY-0p57Oc7YOLk5EJGEf6SQ",
+            authDomain: "jeff-elec.firebaseapp.com",
+            projectId: "jeff-elec",
+            storageBucket: "jeff-elec.firebasestorage.app",
+            messagingSenderId: "990314301369",
+            appId: "1:990314301369:web:095f42977469a49020d868",
+            measurementId: "G-KZMEPBDDV1"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        // ========== LOADER ==========
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelector('.page-loader').classList.add('hidden');
+            }, 600);
         });
-    });
-
-    // ========== DÉTECTION DE LA SECTION ACTIVE POUR LA NAV ==========
-    function updateActiveNavLink() {
-        const sections = document.querySelectorAll('section[id]');
-        const scrollPosition = window.scrollY + 100;
-
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                // Retirer la classe active de tous les liens
-                navLinksAll.forEach(link => {
-                    link.classList.remove('active');
-                });
-                
-                // Ajouter la classe active au lien correspondant
-                const activeLink = navLinks.querySelector(`a[href="#${sectionId}"]`);
-                if (activeLink && !activeLink.classList.contains('btn-nav')) {
-                    activeLink.classList.add('active');
-                    activeLink.style.color = 'var(--primary)';
-                    activeLink.style.fontWeight = '600';
-                }
-            } else {
-                // Réinitialiser le style des liens inactifs
-                const inactiveLink = navLinks.querySelector(`a[href="#${sectionId}"]`);
-                if (inactiveLink && !inactiveLink.classList.contains('btn-nav')) {
-                    inactiveLink.style.color = '';
-                    inactiveLink.style.fontWeight = '';
-                }
-            }
+    
+        // ========== NAVIGATION ==========
+        const navbar = document.getElementById('navbar');
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        const navLinksAll = navLinks.querySelectorAll('a');
+    
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+            updateActiveNavLink();
         });
-
-        // Gérer le cas où on est tout en haut (section home)
-        if (window.scrollY < 100) {
-            navLinksAll.forEach(link => {
-                if (!link.classList.contains('btn-nav')) {
-                    link.classList.remove('active');
-                    link.style.color = '';
-                    link.style.fontWeight = '';
+    
+        navToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+        navLinksAll.forEach(link => link.addEventListener('click', () => navLinks.classList.remove('active')));
+    
+        // ========== DÉTECTION SECTION ACTIVE ==========
+        function updateActiveNavLink() {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPosition = window.scrollY + 100;
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop, sectionHeight = section.offsetHeight, sectionId = section.getAttribute('id');
+                navLinksAll.forEach(link => { link.classList.remove('active'); link.style.color = ''; link.style.fontWeight = ''; });
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    const activeLink = navLinks.querySelector(`a[href="#${sectionId}"]`);
+                    if (activeLink && !activeLink.classList.contains('btn-nav')) { activeLink.classList.add('active'); activeLink.style.color = 'var(--primary)'; activeLink.style.fontWeight = '600'; }
                 }
             });
-            const homeLink = navLinks.querySelector('a[href="#home"]');
-            if (homeLink) {
-                homeLink.classList.add('active');
-                homeLink.style.color = 'var(--primary)';
-                homeLink.style.fontWeight = '600';
+            if (window.scrollY < 100) {
+                navLinksAll.forEach(link => { if(!link.classList.contains('btn-nav')){link.classList.remove('active');link.style.color='';link.style.fontWeight='';} });
+                const homeLink = navLinks.querySelector('a[href="#home"]');
+                if (homeLink) { homeLink.classList.add('active'); homeLink.style.color='var(--primary)'; homeLink.style.fontWeight='600'; }
             }
         }
-    }
-
-    // ========== SCROLL REVEAL ANIMATION ==========
-    function revealOnScroll() {
-        const elements = document.querySelectorAll('.reveal');
-        const windowHeight = window.innerHeight;
-        
-        elements.forEach(el => {
-            const elementTop = el.getBoundingClientRect().top;
-            const revealPoint = 100;
-            
-            if (elementTop < windowHeight - revealPoint) {
-                el.classList.add('active');
-            }
-        });
-    }
-
-    window.addEventListener('scroll', revealOnScroll);
-    window.addEventListener('load', revealOnScroll);
-    // Appel initial
-    revealOnScroll();
-    updateActiveNavLink();
-
-    // ========== TOAST NOTIFICATION ==========
-    function showToast(message, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        const icons = { success: 'check-circle', error: 'times-circle' };
-        toast.innerHTML = `<i class="fas fa-${icons[type]}"></i><span>${message}</span>`;
-        container.appendChild(toast);
-        
-        // Animation de sortie
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(30px)';
-            toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }
-
-    // ========== FORMULAIRE DEVIS ==========
-    document.getElementById('requestForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const request = {
-            id: 'req_' + Date.now(),
-            clientName: document.getElementById('reqName').value,
-            clientEmail: document.getElementById('reqEmail').value,
-            clientPhone: document.getElementById('reqPhone').value,
-            clientCompany: document.getElementById('reqCompany').value,
-            clientAddress: document.getElementById('reqAddress').value,
-            motorType: document.getElementById('reqMotorType').value,
-            power: document.getElementById('reqPower').value,
-            voltage: document.getElementById('reqVoltage').value,
-            current: document.getElementById('reqCurrent').value,
-            frequency: document.getElementById('reqFrequency').value,
-            rpm: document.getElementById('reqRpm').value,
-            insulationClass: document.getElementById('reqInsulation').value,
-            couplingType: document.getElementById('reqCoupling').value,
-            description: document.getElementById('reqDescription').value,
-            createdAt: new Date().toISOString(),
-            status: 'new'
-        };
-        
-        // Sauvegarder dans localStorage
-        const requests = JSON.parse(localStorage.getItem('fortico_web_requests') || '[]');
-        requests.push(request);
-        localStorage.setItem('fortico_web_requests', JSON.stringify(requests));
-        
-        // Notification
-        showToast('✅ Demande de devis envoyée avec succès ! Nous vous contacterons dans les 24h.', 'success');
-        
-        // Réinitialiser le formulaire
-        this.reset();
-        
-        // Remonter en haut
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    // ========== DÉFILAGE DOUX POUR LES LIENS D'ANCRAGE ==========
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+    
+        // ========== SCROLL REVEAL ==========
+        function revealOnScroll() {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active');
+            });
+        }
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+        revealOnScroll();
+        updateActiveNavLink();
+    
+        // ========== TOAST ==========
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: 'check-circle', error: 'times-circle' };
+            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(30px)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 5000);
+        }
+    
+        // ========== FORMULAIRE DEVIS - ENVOI VERS FIREBASE ==========
+        document.getElementById('requestForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const targetId = this.getAttribute('href');
             
-            if (targetId === '#') return;
+            // Bouton loading
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            submitBtn.disabled = true;
             
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                const offsetTop = targetElement.offsetTop - 80; // Décalage pour la navbar fixe
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
+            const request = {
+                clientName: document.getElementById('reqName').value,
+                clientEmail: document.getElementById('reqEmail').value,
+                clientPhone: document.getElementById('reqPhone').value,
+                clientCompany: document.getElementById('reqCompany').value || '',
+                clientAddress: document.getElementById('reqAddress').value || '',
+                motorType: document.getElementById('reqMotorType').value,
+                power: document.getElementById('reqPower').value || '',
+                voltage: document.getElementById('reqVoltage').value || '',
+                current: document.getElementById('reqCurrent').value || '',
+                frequency: document.getElementById('reqFrequency').value || '',
+                rpm: document.getElementById('reqRpm').value || '',
+                insulationClass: document.getElementById('reqInsulation').value || '',
+                couplingType: document.getElementById('reqCoupling').value || '',
+                description: document.getElementById('reqDescription').value,
+                status: 'new', // new, read, replied, archived
+                createdAt: serverTimestamp()
+            };
+            
+            try {
+                // Envoyer vers Firestore
+                await addDoc(collection(db, 'fortico_web_requests'), request);
+                
+                showToast('✅ Demande de devis envoyée avec succès ! Nous vous contacterons dans les 24h.', 'success');
+                this.reset();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Erreur envoi:', error);
+                
+                // Fallback localStorage si Firebase échoue
+                try {
+                    const requests = JSON.parse(localStorage.getItem('fortico_web_requests') || '[]');
+                    request.createdAt = new Date().toISOString();
+                    requests.push(request);
+                    localStorage.setItem('fortico_web_requests', JSON.stringify(requests));
+                    showToast('✅ Demande enregistrée ! (mode hors-ligne)', 'success');
+                    this.reset();
+                } catch (localError) {
+                    showToast('❌ Erreur lors de l\'envoi. Veuillez réessayer.', 'error');
+                }
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
-    });
-// Toggle dark mode
-// ========== MODE SOMBRE ==========
-(function() {
-    // Créer le bouton de toggle
-    const darkToggle = document.createElement('button');
-    darkToggle.id = 'darkModeToggle';
-    darkToggle.setAttribute('title', 'Mode sombre / Mode clair');
-    darkToggle.setAttribute('aria-label', 'Basculer le mode sombre');
-    darkToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    darkToggle.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        right: 30px;
-        width: 50px;
-        height: 50px;
-        background: var(--secondary);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 999;
-        font-size: 20px;
-        box-shadow: var(--shadow-lg);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
-    document.body.appendChild(darkToggle);
     
-    // Vérifier la préférence enregistrée
-    const savedMode = localStorage.getItem('fortico_dark_mode');
-    if (savedMode === 'true') {
-        document.body.classList.add('dark-mode');
-        darkToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    }
+        // ========== DÉFILAGE DOUX ==========
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({ top: targetElement.offsetTop - 80, behavior: 'smooth' });
+                }
+            });
+        });
     
-    // Toggle au clic
-    darkToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        darkToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        localStorage.setItem('fortico_dark_mode', isDark);
-        
-        // Animation
-        darkToggle.style.transform = 'scale(0.8)';
-        setTimeout(() => {
-            darkToggle.style.transform = 'scale(1)';
-        }, 150);
-    });
+        // ========== MODE SOMBRE ==========
+        (function() {
+            const darkToggle = document.createElement('button');
+            darkToggle.id = 'darkModeToggle';
+            darkToggle.setAttribute('title', 'Mode sombre / Mode clair');
+            darkToggle.setAttribute('aria-label', 'Basculer le mode sombre');
+            darkToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            darkToggle.style.cssText = 'position:fixed;bottom:100px;right:30px;width:50px;height:50px;background:var(--secondary);color:white;border:none;border-radius:50%;cursor:pointer;z-index:999;font-size:20px;box-shadow:var(--shadow-lg);transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;';
+            document.body.appendChild(darkToggle);
+            
+            const savedMode = localStorage.getItem('fortico_dark_mode');
+            if (savedMode === 'true') { document.body.classList.add('dark-mode'); darkToggle.innerHTML = '<i class="fas fa-sun"></i>'; }
+            
+            darkToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                darkToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                localStorage.setItem('fortico_dark_mode', isDark);
+                darkToggle.style.transform = 'scale(0.8)';
+                setTimeout(() => { darkToggle.style.transform = 'scale(1)'; }, 150);
+            });
+            
+            darkToggle.addEventListener('mouseenter', () => { darkToggle.style.transform = 'scale(1.1)'; });
+            darkToggle.addEventListener('mouseleave', () => { darkToggle.style.transform = 'scale(1)'; });
+        })();
     
-    // Effet hover
-    darkToggle.addEventListener('mouseenter', () => {
-        darkToggle.style.transform = 'scale(1.1)';
-    });
-    darkToggle.addEventListener('mouseleave', () => {
-        darkToggle.style.transform = 'scale(1)';
-    });
-})();
-    // ========== INITIALISATION ==========
-    console.log('🚀 Fortico Rewind - Plateforme Web initialisée');
-    console.log('📋 Demandes stockées dans localStorage: fortico_web_requests');
-    console.log('📍 Navigation active et animations scroll activées');
-</script>
+        // ========== WHATSAPP FLOTTANT ==========
+        (function() {
+            const waBtn = document.createElement('a');
+            waBtn.href = 'https://wa.me/33123456789?text=Bonjour%20Fortico%20Rewind,%20je%20souhaite%20un%20devis';
+            waBtn.target = '_blank';
+            waBtn.title = 'Contactez-nous sur WhatsApp';
+            waBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:28px;"></i>';
+            waBtn.style.cssText = 'position:fixed;bottom:30px;right:30px;width:60px;height:60px;background:#25D366;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(37,211,102,0.4);z-index:998;transition:all 0.3s;animation:pulse-wa 2s infinite;';
+            document.body.appendChild(waBtn);
+            
+            const style = document.createElement('style');
+            style.textContent = '@keyframes pulse-wa{0%,100%{box-shadow:0 4px 15px rgba(37,211,102,0.4)}50%{box-shadow:0 4px 25px rgba(37,211,102,0.7)}}';
+            document.head.appendChild(style);
+        })();
+    
+        console.log('🚀 Fortico Rewind - Web Client connecté à Firebase');
+    </script>
 </body>
 </html>
