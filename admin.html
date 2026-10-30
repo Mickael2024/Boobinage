@@ -5,24 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jeff Elec • Administration</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dropdown.css">
 </head>
 <body class="admin-page">
   <div class="cyber-loader"><div class="loader-content"><div class="electric-spinner"></div><p>CHARGEMENT SYSTÈME</p></div></div>
 
   <nav class="cyber-nav admin-nav hidden">
     <div class="nav-container">
-      <div class="nav-brand"><i class="fas fa-shield-halved"></i><span>Jeff</span>Elec</span></div>
-      <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+      <div class="nav-brand"><i class="fas fa-shield-halved"></i><span>Jeff <span>Elec</span></span></div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-controls="navMenu"><span></span><span></span><span></span></button>
       <ul class="nav-menu" id="navMenu">
         <li><a href="#" id="navAdminDashboard" class="active"><i class="fas fa-chart-pie"></i>TABLEAU DE BORD</a></li>
         <li><a href="#" id="navAdminUsers"><i class="fas fa-users"></i>UTILISATEURS</a></li>
         <li><a href="#" id="navAdminMotors"><i class="fas fa-microchip"></i>MOTEURS</a></li>
         <li><a href="#" id="navAdminCompleted"><i class="fas fa-check-circle"></i>MOTEURS TERMINÉS</a></li>
         <li><a href="#" id="navAdminMotorTypes"><i class="fas fa-cubes"></i>TYPES MOTEURS</a></li>
+        <li><a href="#" id="navAdminFaults"><i class="fas fa-stethoscope"></i>PANNES &amp; DIAGNOSTICS</a></li>
         <li><a href="#" id="navAdminReports"><i class="fas fa-file-alt"></i>RAPPORTS</a></li>
         <li><a href="#" id="navAdminMessages"><i class="fas fa-envelope"></i>MESSAGES</a></li>
         <li><a href="#" id="navAdminProfile"><i class="fas fa-user-shield"></i>PROFIL ADMIN</a></li>
@@ -35,12 +37,13 @@
     <!-- Login -->
     <div id="adminLoginView" class="auth-wrapper active">
       <div class="auth-card">
+        <a href="index.html" class="auth-back"><i class="fas fa-arrow-left" aria-hidden="true"></i><span>Retour à l'accueil</span></a>
         <div class="auth-header"><div class="auth-icon"><i class="fas fa-shield-halved"></i></div><h2>ADMINISTRATION</h2><p>Accès restreint</p></div>
         <form id="adminLoginForm" class="auth-form active">
-          <div class="input-group"><i class="fas fa-user-shield"></i><input type="text" id="adminUsername" placeholder="IDENTIFIANT" value="admin@fortico.com" required></div>
-          <div class="input-group"><i class="fas fa-key"></i><input type="password" id="adminPassword" placeholder="MOT DE PASSE" value="admin123" required></div>
+          <div class="input-group"><i class="fas fa-user-shield"></i><input type="email" id="adminUsername" placeholder="EMAIL ADMINISTRATEUR" autocomplete="username" required></div>
+          <div class="input-group"><i class="fas fa-key"></i><input type="password" id="adminPassword" placeholder="MOT DE PASSE" autocomplete="current-password" required></div>
+          <label class="remember"><input type="checkbox" id="rememberMe"><span class="remember-box" aria-hidden="true"><i class="fas fa-check"></i></span><span>Se souvenir de moi</span></label>
           <button type="submit" class="cyber-button"><span>AUTHENTIFICATION</span><i class="fas fa-arrow-right"></i></button>
-          <p class="form-note">admin@fortico.com / admin123</p>
         </form>
       </div>
     </div>
@@ -80,7 +83,7 @@
 
     <!-- Gestion Utilisateurs -->
     <div id="usersManagementView" class="management-wrapper">
-      <div class="management-header"><h2><i class="fas fa-users-cog"></i> GESTION UTILISATEURS</h2><button class="cyber-button" id="refreshUsersList"><i class="fas fa-sync-alt"></i><span>ACTUALISER</span></button></div>
+      <div class="management-header"><h2><i class="fas fa-users-cog"></i> GESTION UTILISATEURS</h2><div class="header-actions"><button class="cyber-button secondary" id="refreshUsersList"><i class="fas fa-sync-alt"></i><span>ACTUALISER</span></button><button class="cyber-button" id="addUserBtn"><i class="fas fa-user-plus"></i><span>NOUVEL UTILISATEUR</span></button></div></div>
       <div id="usersList" class="table-container"></div>
     </div>
 
@@ -88,6 +91,16 @@
     <div id="motorsManagementView" class="management-wrapper">
       <div class="management-header"><h2><i class="fas fa-microchip"></i> GESTION MOTEURS</h2><select id="motorFilterStatus" class="cyber-select"><option value="all">Tous</option><option value="pending">En attente</option><option value="in_progress">En cours</option><option value="completed">Terminés</option></select></div>
       <div id="allMotorsList" class="table-container"></div>
+    </div>
+
+    <!-- Gestion Pannes & Diagnostics -->
+    <div id="faultTypesManagementView" class="management-wrapper">
+      <div class="management-header">
+        <h2><i class="fas fa-stethoscope"></i> PANNES &amp; DIAGNOSTICS</h2>
+        <button class="cyber-button" id="addFaultTypeBtn"><i class="fas fa-plus"></i><span>NOUVELLE PANNE</span></button>
+      </div>
+      <p class="view-hint">Créez les types de panne et le diagnostic à effectuer. Les techniciens les choisissent dans le formulaire « Nouveau moteur » et retrouvent le diagnostic sur la fiche du moteur.</p>
+      <div id="faultTypesList" class="table-container"></div>
     </div>
 
     <!-- Gestion Types Moteurs -->
@@ -117,7 +130,7 @@
   </div>
   
   <!-- Stats rapides -->
-  <div class="completed-stats-grid" style="margin-bottom: 24px;">
+  <div class="completed-stats-grid">
     <div class="stat-card success">
       <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
       <div class="stat-value" id="totalCompletedMotors">0</div>
@@ -193,6 +206,7 @@
   <!-- UN SEUL FICHIER au lieu de 4 -->
 <script src="js/all-firebase.js"></script>
 <script src="js/app-firebase.js"></script>
+<script src="js/ui.js"></script>
   <script>document.addEventListener('DOMContentLoaded', () => { initializeStorage(); initializeDefaultMotorTypes(); initAdminPage(); });</script>
 </body>
 </html>

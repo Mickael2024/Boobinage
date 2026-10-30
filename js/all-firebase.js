@@ -21,10 +21,13 @@ const COLLECTIONS = {
     ACTIVITIES: 'fortico_activities',
     MOTOR_TYPES: 'fortico_motor_types',
     REPORTS: 'fortico_reports',
-    WEB_REQUESTS: 'fortico_web_requests'
+    WEB_REQUESTS: 'fortico_web_requests',
+    FAULT_TYPES: 'fortico_fault_types'
 };
 
-async function initFirebase() {
+let _fbReady = null;
+function initFirebase() { return (_fbReady ||= _initFirebase()); }
+async function _initFirebase() {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getFirestore, Timestamp: TS } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
@@ -104,6 +107,38 @@ async function deleteStepFromMotorType(typeId, stepId) {
     type.customSteps = type.customSteps.filter(s => s.id !== stepId);
     await updateMotorType(typeId, { customSteps: type.customSteps });
     return true;
+}
+
+// === TYPES DE PANNE + DIAGNOSTIC ===
+// { name, category, motorType: 'all'|'three_phase'|'single_phase', description, diagnostic: [{ id, title, expected }] }
+async function getFaultTypes() {
+    if (!db) return [];
+    const { getDocs, collection: col } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const s = await getDocs(col(db, COLLECTIONS.FAULT_TYPES));
+    const r = []; s.forEach(d => r.push({ id: d.id, ...d.data() }));
+    return r.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr'));
+}
+
+async function saveFaultType(ft) {
+    if (!db) return null;
+    const { addDoc, collection: col } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    ft.createdAt = new Date().toISOString();
+    const ref = await addDoc(col(db, COLLECTIONS.FAULT_TYPES), ft);
+    return { id: ref.id, ...ft };
+}
+
+async function updateFaultType(id, updates) {
+    if (!db) return null;
+    const { updateDoc, doc: d } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    updates.updatedAt = new Date().toISOString();
+    await updateDoc(d(db, COLLECTIONS.FAULT_TYPES, id), updates);
+    return { id, ...updates };
+}
+
+async function deleteFaultType(id) {
+    if (!db) return false;
+    const { deleteDoc, doc: d } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(d(db, COLLECTIONS.FAULT_TYPES, id)); return true;
 }
 
 async function getUsers() {
@@ -256,9 +291,44 @@ async function getReportsByMotor(motorId) {
     const r = []; s.forEach(d => r.push({ id: d.id, ...d.data() })); return r;
 }
 
-function setCurrentUser(user) { sessionStorage.setItem('currentUser', JSON.stringify(user)); }
-function getCurrentUser() { return JSON.parse(sessionStorage.getItem('currentUser') || 'null'); }
-function logout() { sessionStorage.removeItem('currentUser'); try { auth?.signOut(); } catch(e){} }
+// Session : jamais de mot de passe stocké. "Se souvenir de moi" => localStorage pendant 30 jours,
+// sinon sessionStorage (fin de session à la fermeture de l'onglet).
+const SESSION_DAYS = 30;
+function setCurrentUser(user, remember = false) {
+    const { password, ...safe } = user || {};
+    try { sessionStorage.removeItem('currentUser'); localStorage.removeItem('currentUser'); } catch (e) {}
+    if (remember) localStorage.setItem('currentUser', JSON.stringify({ user: safe, exp: Date.now() + SESSION_DAYS * 864e5 }));
+    else sessionStorage.setItem('currentUser', JSON.stringify(safe));
+}
+function getCurrentUser() {
+    try {
+        const sess = sessionStorage.getItem('currentUser');
+        if (sess) return JSON.parse(sess);
+        const raw = localStorage.getItem('currentUser');
+        if (!raw) return null;
+        const { user, exp } = JSON.parse(raw);
+        if (!user || !exp || exp < Date.now()) { localStorage.removeItem('currentUser'); return null; }
+        return user;
+    } catch (e) { return null; }
+}
+function isRememberedSession() { try { return !sessionStorage.getItem('currentUser') && !!localStorage.getItem('currentUser'); } catch (e) { return false; } }
+// Garde la session mais met à jour les champs modifiés (conserve role, etc.)
+function updateCurrentUser(changes) {
+    const cur = getCurrentUser(); if (!cur) return;
+    setCurrentUser({ ...cur, ...changes }, isRememberedSession());
+}
+// Session mémorisée : vérifie que le compte existe toujours et est toujours autorisé
+async function validateRememberedSession(expectedRole) {
+    if (!isRememberedSession()) return;
+    try {
+        const cur = getCurrentUser(); if (!cur) return;
+        await initFirebase();
+        const fresh = await getUserByEmail(cur.email);
+        if (!fresh || fresh.role !== expectedRole || (expectedRole === 'user' && !fresh.approved)) { logout(); return; }
+        setCurrentUser(fresh, true);
+    } catch (e) { /* hors-ligne : on garde la session */ }
+}
+function logout() { try { sessionStorage.removeItem('currentUser'); localStorage.removeItem('currentUser'); } catch(e){} try { auth?.signOut(); } catch(e){} }
 
 function getDefaultSteps(motorType) {
     const steps = [
@@ -311,13 +381,13 @@ async function initializeStorage() {
 }
 
 // === AUTH ===
-async function authenticateUser(email, password) {
-    try { try{await auth.signInWithEmailAndPassword(email,password);}catch(e){} const u=await getUserByEmail(email); if(!u||u.role!=='user'||!u.approved||u.password!==password) return {success:false,message:'Identifiants invalides'}; setCurrentUser(u); await addActivity({type:'login',userId:u.id,description:`${u.name} connecté`}); return {success:true,user:u}; }
+async function authenticateUser(email, password, remember = false) {
+    try { try{await auth.signInWithEmailAndPassword(email,password);}catch(e){} const u=await getUserByEmail(email); if(!u||u.role!=='user'||!u.approved||u.password!==password) return {success:false,message:'Identifiants invalides'}; setCurrentUser(u, remember); await addActivity({type:'login',userId:u.id,description:`${u.name} connecté`}); return {success:true,user:u}; }
     catch(e){return {success:false,message:'Erreur'};}
 }
 
-async function authenticateAdmin(email, password) {
-    try { try{await auth.signInWithEmailAndPassword(email,password);}catch(e){} const a=await getUserByEmail(email); if(!a||a.role!=='admin'||a.password!==password) return {success:false,message:'Accès refusé'}; setCurrentUser(a); await addActivity({type:'admin_login',userId:a.id,description:'Admin connecté'}); return {success:true,admin:a}; }
+async function authenticateAdmin(email, password, remember = false) {
+    try { try{await auth.signInWithEmailAndPassword(email,password);}catch(e){} const a=await getUserByEmail(email); if(!a||a.role!=='admin'||a.password!==password) return {success:false,message:'Accès refusé'}; setCurrentUser(a, remember); await addActivity({type:'admin_login',userId:a.id,description:'Admin connecté'}); return {success:true,admin:a}; }
     catch(e){return {success:false,message:'Erreur'};}
 }
 

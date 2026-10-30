@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jell Elec • Expert en Rebobinage de Moteurs Électriques</title>
+    <title>Jeff Elec • Expert en Rebobinage de Moteurs Électriques</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dropdown.css">
     <style>
         :root {
             --primary: #e63946;
@@ -28,6 +29,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
+        section[id] { scroll-margin-top: 80px; }
         body { font-family: 'Inter', sans-serif; color: var(--text-dark); line-height: 1.6; overflow-x: hidden; }
 
         .page-loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.4s, visibility 0.4s; }
@@ -170,6 +172,24 @@
             .stats-grid { margin-top: 30px; }
             #backToTop { right: 20px; bottom: 100px; }
         }
+        .nav-toggle { padding: 10px; }
+        .hero-content p { animation-fill-mode: forwards; }
+        .map-container iframe { display: block; }
+        @media (max-width: 480px) {
+            .section { padding: 56px 16px; }
+            .hero { padding: 64px 16px; }
+            .request-form { padding: 24px 16px; }
+            .btn-primary-hero, .btn-outline-hero { width: 100%; justify-content: center; }
+            .section-header h2 { font-size: 1.7rem; }
+            .topbar-container { justify-content: center; text-align: center; }
+            .topbar a { margin: 0 8px; }
+            .toast-container { left: 12px; right: 12px; top: 12px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            .reveal, .reveal-left, .reveal-right, .reveal-zoom, .hero-content p, .hero-buttons { opacity: 1 !important; transform: none !important; }
+        }
+        .cta-banner::before { pointer-events: none; }
         /* ========== MODE SOMBRE ========== */
 body.dark-mode {
     --bg-light: #1a1d23;
@@ -263,7 +283,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <a href="#" class="nav-logo"><i class="fas fa-bolt"></i>Jeff <span>Elec</span></a>
-            <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+            <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#home">Accueil</a></li>
                 <li><a href="#services">Services</a></li>
@@ -318,7 +338,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
     <section class="section" id="why-us">
         <div class="section-container">
             <div class="why-grid">
-                <div class="why-image reveal-left"><img src="./image/images (5).jpg" alt="Atelier Jell Elec"></div>
+                <div class="why-image reveal-left"><img src="./image/images (5).jpg" alt="Atelier Jeff Elec"></div>
                 <div class="why-content reveal-right">
                     <h2>Pourquoi nous choisir</h2>
                     <ul class="why-list">
@@ -337,16 +357,16 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
             <div class="section-header reveal"><h2>Demande de Devis</h2><p>Remplissez le formulaire, réponse sous 24h</p></div>
             <form class="request-form reveal-zoom" id="requestForm">
                 <div class="form-grid">
-                    <div class="form-group"><label>Nom *</label><input type="text" id="reqName" required></div>
-                    <div class="form-group"><label>Email *</label><input type="email" id="reqEmail" required></div>
-                    <div class="form-group"><label>Téléphone *</label><input type="tel" id="reqPhone" required></div>
-                    <div class="form-group"><label>Entreprise</label><input type="text" id="reqCompany"></div>
-                    <div class="form-group full-width"><label>Adresse</label><input type="text" id="reqAddress"></div>
-                    <div class="form-group"><label>Type de moteur *</label><select id="reqMotorType" required><option value="">Sélectionner</option><option value="three_phase">Triphasé</option><option value="single_phase">Monophasé</option></select></div>
-                    <div class="form-group"><label>Puissance (kW)</label><input type="number" step="0.01" id="reqPower"></div>
-                    <div class="form-group"><label>Tension (V)</label><input type="number" id="reqVoltage"></div>
-                    <div class="form-group"><label>Courant (A)</label><input type="number" step="0.1" id="reqCurrent"></div>
-                    <div class="form-group full-width"><label>Description de la panne *</label><textarea id="reqDescription" required></textarea></div>
+                    <div class="form-group"><label for="reqName">Nom *</label><input type="text" id="reqName" name="name" autocomplete="name" required></div>
+                    <div class="form-group"><label for="reqEmail">Email *</label><input type="email" id="reqEmail" name="email" autocomplete="email" required></div>
+                    <div class="form-group"><label for="reqPhone">Téléphone *</label><input type="tel" id="reqPhone" name="tel" autocomplete="tel" required></div>
+                    <div class="form-group"><label for="reqCompany">Entreprise</label><input type="text" id="reqCompany" autocomplete="organization"></div>
+                    <div class="form-group full-width"><label for="reqAddress">Adresse</label><input type="text" id="reqAddress"></div>
+                    <div class="form-group"><label for="reqMotorType">Type de moteur *</label><select id="reqMotorType" required><option value="">Sélectionner</option><option value="three_phase">Triphasé</option><option value="single_phase">Monophasé</option></select></div>
+                    <div class="form-group"><label for="reqPower">Puissance (kW)</label><input type="number" step="0.01" id="reqPower"></div>
+                    <div class="form-group"><label for="reqVoltage">Tension (V)</label><input type="number" id="reqVoltage"></div>
+                    <div class="form-group"><label for="reqCurrent">Courant (A)</label><input type="number" step="0.1" id="reqCurrent"></div>
+                    <div class="form-group full-width"><label for="reqDescription">Description de la panne *</label><textarea id="reqDescription" required></textarea></div>
                 </div>
                 <button type="submit" class="btn-primary-hero" style="width:100%;margin-top:20px;justify-content:center;">
                     <i class="fas fa-paper-plane"></i> Envoyer la demande
@@ -366,7 +386,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
                     <div class="contact-item"><i class="fas fa-clock"></i><div><strong>Horaires</strong><br>Lun-Ven : 8h-18h | Sam : 8h-12h</div></div>
                 </div>
                 <div class="map-container reveal-right">
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9916256937595!2d2.292292615674389!3d48.85837007928746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e66e2964e34e2d%3A0x8ddca9ee380ef7e0!2sTour%20Eiffel!5e0!3m2!1sfr!2sfr!4v1680000000000!5m2!1sfr!2sfr" allowfullscreen loading="lazy"></iframe>
+                    <iframe title="Plan d'accès" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.9916256937595!2d2.292292615674389!3d48.85837007928746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e66e2964e34e2d%3A0x8ddca9ee380ef7e0!2sTour%20Eiffel!5e0!3m2!1sfr!2sfr!4v1680000000000!5m2!1sfr!2sfr" allowfullscreen loading="lazy"></iframe>
                 </div>
             </div>
         </div>
@@ -374,15 +394,16 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
 
     <footer class="footer">
         <div class="footer-container">
-            <div><h3><i class="fas fa-bolt"></i> Jell Elec</h3><p>Expert en rebobinage depuis 2009.</p><div class="social-links"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a><a href="#"><i class="fab fa-whatsapp"></i></a></div></div>
+            <div><h3><i class="fas fa-bolt"></i> Jeff Elec</h3><p>Expert en rebobinage depuis 2009.</p><div class="social-links"><a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a><a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a></div></div>
             <div><h3>Services</h3><a href="#">Diagnostic</a><a href="#">Rebobinage</a><a href="#">Équilibrage</a></div>
             <div><h3>Liens</h3><a href="#home">Accueil</a><a href="#services">Services</a><a href="#request">Devis</a></div>
             <div><h3>Contact</h3><a href="tel:+33123456789">+33 1 23 45 67 89</a><a href="mailto:contact@forticorewind.com">Email</a></div>
         </div>
-        <div class="footer-bottom">&copy; 2026 Jell Elec. Tous droits réservés.</div>
+        <div class="footer-bottom">&copy; 2026 Jeff Elec. Tous droits réservés.</div>
     </footer>
 
 
+    <script src="js/ui.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -392,7 +413,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
         window.addEventListener('load', () => setTimeout(() => document.querySelector('.page-loader').classList.add('hidden'), 600));
         
         const navToggle = document.getElementById('navToggle'), navLinks = document.getElementById('navLinks');
-        navToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+        navToggle.addEventListener('click', () => { const open = navLinks.classList.toggle('active'); navToggle.setAttribute('aria-expanded', open); });
         navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => navLinks.classList.remove('active')));
 
         function showToast(m, t = 'success') {
@@ -461,7 +482,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
         }
 
         function createBackToTop() {
-            const btn = document.createElement('button'); btn.id = 'backToTop'; btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            const btn = document.createElement('button'); btn.id = 'backToTop'; btn.setAttribute('aria-label', 'Retour en haut'); btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
             document.body.appendChild(btn);
             btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
             window.addEventListener('scroll', () => { btn.style.display = window.scrollY > 500 ? 'flex' : 'none'; });
@@ -480,7 +501,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
             if (el) window.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
         }));
 
-        document.querySelectorAll('.service-card, .stat-item').forEach(card => {
+        if (window.matchMedia('(hover: hover) and (prefers-reduced-motion: no-preference)').matches) document.querySelectorAll('.service-card, .stat-item').forEach(card => {
             card.addEventListener('mousemove', (e) => {
                 const r = card.getBoundingClientRect(), cx = r.width/2, cy = r.height/2;
                 card.style.transform = `perspective(1000px) rotateX(${(e.clientY-r.top-cy)/20}deg) rotateY(${(cx-(e.clientX-r.left))/20}deg) translateY(-8px)`;
@@ -491,12 +512,13 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
 (function() {
     const darkToggle = document.createElement('button');
     darkToggle.id = 'darkModeToggle';
-    darkToggle.title = 'Mode sombre / Mode clair';
+    darkToggle.title = 'Mode sombre / Mode clair'; darkToggle.setAttribute('aria-label', 'Basculer le mode sombre');
     darkToggle.innerHTML = '<i class="fas fa-moon"></i>';
     document.body.appendChild(darkToggle);
     
     // Vérifier la préférence enregistrée
-    if (localStorage.getItem('fortico_dark_mode') === 'true') {
+    let saved = null; try { saved = localStorage.getItem('fortico_dark_mode'); } catch (e) {}
+    if (saved === 'true') {
         document.body.classList.add('dark-mode');
         darkToggle.innerHTML = '<i class="fas fa-sun"></i>';
     }
@@ -505,7 +527,7 @@ body.dark-mode .loader-spinner { border-color: #30363d; }
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         darkToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        localStorage.setItem('fortico_dark_mode', isDark);
+        try { localStorage.setItem('fortico_dark_mode', isDark); } catch (e) {}
         
         // Animation
         darkToggle.style.transform = 'scale(0.8)';

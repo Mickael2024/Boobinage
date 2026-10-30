@@ -2,15 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jeff Elec • Gestion de Rebobinage</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="index-page">
-  <!-- Canvas pour animation électrique -->
-  <canvas id="electricCanvas"></canvas>
   <!-- Loader -->
   <div class="cyber-loader">
     <div class="loader-content">
@@ -46,7 +44,7 @@
     <!-- Cartes de sélection -->
     <div class="access-cards">
       <!-- Carte Utilisateur -->
-      <div class="cyber-card user-gate" data-role="user">
+      <a class="cyber-card user-gate" href="user.html" data-role="user">
         <div class="card-circuit"></div>
         <div class="card-content">
           <div class="card-header-icon">
@@ -66,10 +64,10 @@
           </div>
         </div>
         <div class="card-overlay"></div>
-      </div>
+      </a>
 
       <!-- Carte Administrateur -->
-      <div class="cyber-card admin-gate" data-role="admin">
+      <a class="cyber-card admin-gate" href="admin.html" data-role="admin">
         <div class="card-circuit"></div>
         <div class="card-content">
           <div class="card-header-icon">
@@ -89,18 +87,18 @@
           </div>
         </div>
         <div class="card-overlay"></div>
-      </div>
+      </a>
     </div>
 
     <!-- Stats rapides -->
     <div class="quick-stats">
       <div class="stat-badge">
-        <i class="fas fa-bolt"></i>
-        <span>ISO 9001:2025</span>
+        <i class="fas fa-list-check"></i>
+        <span>SUIVI PAR ÉTAPES</span>
       </div>
       <div class="stat-badge">
-        <i class="fas fa-shield"></i>
-        <span>CRYPTAGE AES-256</span>
+        <i class="fas fa-lock"></i>
+        <span>ACCÈS SÉCURISÉ</span>
       </div>
       <div class="stat-badge">
         <i class="fas fa-sync-alt"></i>
@@ -112,129 +110,33 @@
   <!-- Notifications -->
   <div id="notification-container"></div>
 
-  <!-- <script src="js/storage.js"></script> -->
   <script>
-
-    
-    // Animation du canvas électrique
-    const canvas = document.getElementById('electricCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    
-    function resizeCanvas() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    // Points pour l'animation
-    const points = [];
-    for (let i = 0; i < 50; i++) {
-      points.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5
-      });
-    }
-    
-    function animate() {
-      ctx.fillStyle = 'rgba(10, 15, 30, 0.1)';
-      ctx.fillRect(0, 0, width, height);
-      
-      points.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
-        
-        // Dessiner des connexions électriques
-        points.forEach(p2 => {
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist < 100) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(0, 255, 255, ${0.1 * (1 - dist / 100)})`;
-            ctx.lineWidth = 0.5;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        });
-        
-        // Point lumineux
-        ctx.beginPath();
-        ctx.fillStyle = '#00ffff';
-        ctx.shadowColor = '#00ffff';
-        ctx.shadowBlur = 10;
-        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-      
-      requestAnimationFrame(animate);
-    }
-    animate();
-    
     // Loader
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.querySelector('.cyber-loader').classList.add('hidden');
-      }, 1500);
+      setTimeout(() => document.querySelector('.cyber-loader').classList.add('hidden'), 500);
     });
-    
-    // Typing effect
+
+    // Effet de frappe (statique si l'utilisateur préfère moins d'animations)
     const texts = ['Diagnostic électrique avancé', 'Rebobinage professionnel', 'Traçabilité complète'];
-    let textIndex = 0;
-    let charIndex = 0;
     const typingElement = document.querySelector('.typing-text');
-    
-    function type() {
-      if (charIndex < texts[textIndex].length) {
-        typingElement.textContent += texts[textIndex].charAt(charIndex);
-        charIndex++;
-        setTimeout(type, 100);
-      } else {
-        setTimeout(erase, 2000);
-      }
-    }
-    
-    function erase() {
-      if (charIndex > 0) {
-        typingElement.textContent = texts[textIndex].substring(0, charIndex - 1);
-        charIndex--;
-        setTimeout(erase, 50);
-      } else {
-        textIndex = (textIndex + 1) % texts.length;
-        setTimeout(type, 500);
-      }
-    }
-    
-    setTimeout(type, 1000);
-    
-    // Navigation
-    document.querySelectorAll('.cyber-card').forEach(card => {
-      card.addEventListener('click', function() {
-        const role = this.dataset.role;
-        const targetPage = role === 'user' ? 'user.html' : 'admin.html';
-        
-        if (typeof showNotification === 'function') {
-          showNotification(`Accès ${role === 'user' ? 'Technicien' : 'Administrateur'}`, 'info');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      typingElement.textContent = texts[0];
+      document.querySelector('.cursor').hidden = true;
+    } else {
+      let textIndex = 0, charIndex = 0, erasing = false;
+      (function tick() {
+        const t = texts[textIndex];
+        if (!erasing) {
+          typingElement.textContent = t.slice(0, ++charIndex);
+          if (charIndex === t.length) { erasing = true; return setTimeout(tick, 2000); }
+          setTimeout(tick, 80);
+        } else {
+          typingElement.textContent = t.slice(0, --charIndex);
+          if (charIndex === 0) { erasing = false; textIndex = (textIndex + 1) % texts.length; return setTimeout(tick, 400); }
+          setTimeout(tick, 40);
         }
-        
-        // Effet de transition
-        this.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-          window.location.href = targetPage;
-        }, 300);
-      });
-    });
+      })();
+    }
   </script>
 </body>
 </html>
