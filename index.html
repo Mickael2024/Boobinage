@@ -1,142 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeff Elec • Gestion de Rebobinage</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="index-page">
-  <!-- Loader -->
-  <div class="cyber-loader">
-    <div class="loader-content">
-      <div class="electric-spinner">
-        <div class="coil"></div>
-        <div class="coil"></div>
-        <div class="coil"></div>
-      </div>
-      <p class="loader-text">INITIALISATION SYSTÈME</p>
-      <div class="loader-bar">
-        <div class="loader-progress"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="index-container">
-    <!-- Logo avec effet néon -->
-    <div class="hero-section">
-      <div class="logo-wrapper">
-        <div class="logo-glow"></div>
-        <div class="logo-icon">
-          <i class="fas fa-bolt"></i>
-          <div class="logo-spark"></div>
-        </div>
-      </div>
-      <h1 class="glitch-text" data-text="Jeff Elec">Jeff<span>Elec</span></h1>
-      <p class="hero-subtitle">
-        <span class="typing-text"></span>
-        <span class="cursor">|</span>
-      </p>
-    </div>
-
-    <!-- Cartes de sélection -->
-    <div class="access-cards">
-      <!-- Carte Utilisateur -->
-      <a class="cyber-card user-gate" href="user.html" data-role="user">
-        <div class="card-circuit"></div>
-        <div class="card-content">
-          <div class="card-header-icon">
-            <i class="fas fa-microchip"></i>
-            <div class="pulse-ring"></div>
-          </div>
-          <h2>ESPACE TECHNIQUE</h2>
-          <p>Accédez aux procédures de rebobinage, enregistrez les moteurs et suivez chaque étape technique</p>
-          <ul class="feature-list">
-            <li><i class="fas fa-check"></i> Diagnostic complet</li>
-            <li><i class="fas fa-check"></i> Tests électriques</li>
-            <li><i class="fas fa-check"></i> Relevé bobinage</li>
-          </ul>
-          <div class="card-action">
-            <span>CONNEXION REQUISE</span>
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-        <div class="card-overlay"></div>
-      </a>
-
-      <!-- Carte Administrateur -->
-      <a class="cyber-card admin-gate" href="admin.html" data-role="admin">
-        <div class="card-circuit"></div>
-        <div class="card-content">
-          <div class="card-header-icon">
-            <i class="fas fa-shield-halved"></i>
-            <div class="pulse-ring"></div>
-          </div>
-          <h2>SUPERVISION</h2>
-          <p>Validez les procédures, gérez les utilisateurs et supervisez l'ensemble des opérations</p>
-          <ul class="feature-list">
-            <li><i class="fas fa-check"></i> Validation étapes</li>
-            <li><i class="fas fa-check"></i> Gestion utilisateurs</li>
-            <li><i class="fas fa-check"></i> Rapports détaillés</li>
-          </ul>
-          <div class="card-action">
-            <span>ACCÈS SÉCURISÉ</span>
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-        <div class="card-overlay"></div>
-      </a>
-    </div>
-
-    <!-- Stats rapides -->
-    <div class="quick-stats">
-      <div class="stat-badge">
-        <i class="fas fa-list-check"></i>
-        <span>SUIVI PAR ÉTAPES</span>
-      </div>
-      <div class="stat-badge">
-        <i class="fas fa-lock"></i>
-        <span>ACCÈS SÉCURISÉ</span>
-      </div>
-      <div class="stat-badge">
-        <i class="fas fa-sync-alt"></i>
-        <span>SYNC TEMPS RÉEL</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Notifications -->
-  <div id="notification-container"></div>
-
-  <script>
-    // Loader
-    window.addEventListener('load', () => {
-      setTimeout(() => document.querySelector('.cyber-loader').classList.add('hidden'), 500);
-    });
-
-    // Effet de frappe (statique si l'utilisateur préfère moins d'animations)
-    const texts = ['Diagnostic électrique avancé', 'Rebobinage professionnel', 'Traçabilité complète'];
-    const typingElement = document.querySelector('.typing-text');
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      typingElement.textContent = texts[0];
-      document.querySelector('.cursor').hidden = true;
-    } else {
-      let textIndex = 0, charIndex = 0, erasing = false;
-      (function tick() {
-        const t = texts[textIndex];
-        if (!erasing) {
-          typingElement.textContent = t.slice(0, ++charIndex);
-          if (charIndex === t.length) { erasing = true; return setTimeout(tick, 2000); }
-          setTimeout(tick, 80);
-        } else {
-          typingElement.textContent = t.slice(0, --charIndex);
-          if (charIndex === 0) { erasing = false; textIndex = (textIndex + 1) % texts.length; return setTimeout(tick, 400); }
-          setTimeout(tick, 40);
-        }
-      })();
-    }
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#252a30" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Jeff Elec • Gestion de Rebobinage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
