@@ -25,25 +25,25 @@
   background: var(--bg-white, #fff);
   border: 1px solid var(--border-medium, #cbd5e1);
   border-radius: var(--radius, 10px);
-  color: var(--text-dark, #0f172a);
+  color: var(--text-dark, #252a30);
   font: inherit;
   font-size: 0.95rem;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.dd-toggle:hover { border-color: var(--primary, #2563eb); }
+.dd-toggle:hover { border-color: var(--primary, #f28c28); }
 .dd-toggle:focus-visible,
 .dd.open .dd-toggle {
   outline: none;
-  border-color: var(--primary, #2563eb);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  border-color: var(--primary, #f28c28);
+  box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.18);
 }
-.dd-toggle.invalid { border-color: var(--danger, #ef4444); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+.dd-toggle.invalid { border-color: var(--danger, #d94b45); box-shadow: 0 0 0 3px rgba(217, 75, 69, 0.15); }
 .dd-toggle.placeholder .dd-label { color: var(--text-light, #94a3b8); }
 .dd-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dd-caret { font-size: 12px; color: var(--text-secondary, #64748b); transition: transform 0.2s; flex-shrink: 0; }
-.dd.open .dd-caret { transform: rotate(180deg); color: var(--primary, #2563eb); }
+.dd.open .dd-caret { transform: rotate(180deg); color: var(--primary, #f28c28); }
 .dd.disabled .dd-toggle { opacity: 0.55; cursor: not-allowed; background: var(--bg-gray, #f1f5f9); }
 
 /* dans un .input-group : icône à gauche */
@@ -60,7 +60,7 @@
   background: var(--bg-white, #fff);
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
-  box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.25), 0 4px 10px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 40px -8px rgba(37, 42, 48, 0.25), 0 4px 10px rgba(37, 42, 48, 0.08);
   animation: ddIn 0.14s ease;
   transform-origin: top center;
 }
@@ -74,15 +74,15 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: var(--text-dark, #0f172a);
+  color: var(--text-dark, #252a30);
   font-size: 0.92rem;
   cursor: pointer;
   user-select: none;
 }
 .dd-option.active { background: var(--bg-gray, #f1f5f9); }
 .dd-option.empty { color: var(--text-light, #94a3b8); }
-.dd-option.selected { color: var(--primary, #2563eb); font-weight: 600; background: rgba(37, 99, 235, 0.08); }
-.dd-option.selected.active { background: rgba(37, 99, 235, 0.14); }
+.dd-option.selected { color: var(--primary, #d9731a); font-weight: 600; background: rgba(242, 140, 40, 0.08); }
+.dd-option.selected.active { background: rgba(242, 140, 40, 0.14); }
 .dd-option i { font-size: 12px; visibility: hidden; }
 .dd-option.selected i { visibility: visible; }
 .dd-option.disabled { opacity: 0.45; cursor: not-allowed; }
@@ -102,6 +102,6 @@ body.dark-mode .dd-option.active { background: #2c313a; }
   background: transparent; border: none; border-radius: 8px; cursor: pointer;
   color: var(--text-secondary, #64748b); transition: background 0.15s, color 0.15s;
 }
-.pw-toggle:hover { background: var(--bg-gray, #f1f5f9); color: var(--primary, #2563eb); }
-.pw-toggle:focus-visible { outline: 2px solid var(--primary, #2563eb); outline-offset: 1px; }
+.pw-toggle:hover { background: var(--bg-gray, #f1f5f9); color: var(--primary, #f28c28); }
+.pw-toggle:focus-visible { outline: 2px solid var(--primary, #f28c28); outline-offset: 1px; }
 .pw-toggle i { font-size: 15px; }
