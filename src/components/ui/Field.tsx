@@ -1,5 +1,6 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { Icon } from "./Icon";
+import { FOCUS_RING } from "./styles";
 
 /** Libellé + champ. */
 export function Field({ label, htmlFor, className = "", children }: { label: ReactNode; htmlFor?: string; className?: string; children: ReactNode }) {
@@ -26,7 +27,7 @@ export function PasswordInput({ className = "field-input", ...props }: Omit<Inpu
         aria-label={label}
         aria-pressed={show}
         title={label}
-        className="absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-3 transition hover:bg-mist hover:text-ink"
+        className={`absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-3 transition hover:bg-mist hover:text-ink ${FOCUS_RING}`}
       >
         <Icon name={show ? "eye-slash" : "eye"} />
       </button>
@@ -39,19 +40,20 @@ export function IconInput({ icon, password, ...props }: { icon: string; password
   const cls = "field-input pl-11";
   return (
     <div className="group relative mb-5">
-      <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3.5 z-10 -translate-y-1/2 text-ink-3 transition group-focus-within:text-primary" />
+      <Icon name={icon} className="pointer-events-none absolute top-1/2 left-3.5 z-10 -translate-y-1/2 text-ink-3 transition group-focus-within:text-primary-dark" />
       {password ? <PasswordInput {...props} className={cls} /> : <input {...props} className={cls} />}
     </div>
   );
 }
 
+/** Case « Se souvenir de moi » stylée (checkbox native masquée, accessible au clavier). */
 export function RememberMe({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="group -mt-1 mb-[18px] inline-flex cursor-pointer items-center gap-2.5 text-[0.88rem] text-ink-2 select-none">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
       <span
         aria-hidden
-        className="grid size-5 shrink-0 place-items-center rounded-md border-[1.5px] border-line-strong bg-white text-[11px] text-transparent transition group-hover:border-primary peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white peer-focus-visible:ring-3 peer-focus-visible:ring-primary/25"
+        className="grid size-5 shrink-0 place-items-center rounded-md border-[1.5px] border-line-strong bg-white text-[11px] text-transparent transition group-hover:border-primary peer-checked:border-primary-border peer-checked:bg-primary peer-checked:text-on-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary-dark peer-focus-visible:ring-offset-2"
       >
         <Icon name="check" />
       </span>

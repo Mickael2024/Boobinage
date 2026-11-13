@@ -144,7 +144,7 @@ export function Select({ id, value, onChange, options, inline, invalid, disabled
         disabled={disabled}
         onClick={() => (open ? close() : show())}
         onKeyDown={onKeyDown}
-        className={`flex w-full items-center justify-between gap-3 rounded-[10px] border bg-white text-left text-[0.95rem] transition focus:outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:bg-mist disabled:opacity-70 ${inline ? "min-h-10 px-3.5 py-2" : "min-h-11 px-4 py-2.5"} ${invalid ? "border-danger" : open ? "border-primary ring-3 ring-primary/20" : "border-line-strong hover:border-[#d9b48c]"}`}
+        className={`flex w-full items-center justify-between gap-3 rounded-[10px] border bg-white text-left text-[0.95rem] transition focus:outline-none focus-visible:border-primary-border focus-visible:ring-3 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:bg-mist disabled:opacity-70 ${inline ? "min-h-10 px-3.5 py-2" : "min-h-11 px-4 py-2.5"} ${invalid ? "border-danger" : open ? "border-primary-border ring-3 ring-primary/30" : "border-line-strong hover:border-line-hover"}`}
       >
         <span className={`truncate ${isPlaceholder ? "text-ink-3" : "text-ink"}`}>{selected?.label ?? ""}</span>
         <Icon name="chevron-down" className={`text-xs text-ink-3 transition-transform ${open ? "rotate-180 text-primary" : ""}`} />

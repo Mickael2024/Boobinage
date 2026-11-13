@@ -4,11 +4,18 @@ import { AppShell, type NavItem } from "../../components/layout/AppShell";
 import { LoginForm } from "../../components/layout/LoginForm";
 import { Loading } from "../../components/ui/Display";
 import { useToast } from "../../components/ui/Toast";
-import { watchUnreadReports } from "../../lib/db";
-import { logout, useCurrentUser, validateRememberedSession } from "../../lib/session";
+import { watchUnreadReports, watchValidationRequests } from "../../lib/db";
+import { logout, useAuthReady, useCurrentUser } from "../../lib/session";
 import { AdminDashboard } from "./AdminDashboard";
 import { AdminMotorDetail } from "./AdminMotorDetail";
 import { AdminProfile } from "./AdminProfile";
+import { ClientDetail } from "./ClientDetail";
+import { Clients } from "./Clients";
+import { InvoiceDetail } from "./InvoiceDetail";
+import { Invoices } from "./Invoices";
+import { QuoteEditor } from "./QuoteEditor";
+import { Quotes } from "./Quotes";
+import { Settings } from "./Settings";
 import { CompletedMotors } from "./CompletedMotors";
 import { FaultTypes } from "./FaultTypes";
 import { Messages } from "./Messages";
@@ -38,30 +45,39 @@ function useUnreadReports(enabled: boolean) {
   return count;
 }
 
+/** Nombre de moteurs dont le technicien a demandé la validation, en temps réel. */
+function useValidationRequests(enabled: boolean) {
+  const [count, setCount] = useState(0);
+  useEffect(() => (enabled ? watchValidationRequests(setCount) : undefined), [enabled]);
+  return count;
+}
+
 export default function AdminApp() {
   const admin = useCurrentUser();
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+  const ready = useAuthReady();
   const isAdmin = admin?.role === "admin";
   const unread = useUnreadReports(isAdmin);
+  const validations = useValidationRequests(isAdmin);
 
-  useEffect(() => {
-    validateRememberedSession("admin").finally(() => setChecking(false));
-  }, []);
-
-  if (checking) return <Loading />;
-  if (!isAdmin) return <LoginForm role="admin" icon="shield-halved" title="ADMINISTRATION" subtitle="Accès restreint" />;
+  // Firebase Auth restaure la session (et vérifie le profil) avant l'affichage
+  if (!ready) return <Loading />;
+  if (!isAdmin) return <LoginForm role="admin" icon="shield-halved" title="Administration" subtitle="Accès restreint" />;
 
   const nav: NavItem[] = [
-    { to: "/admin", label: "TABLEAU DE BORD", icon: "chart-pie", end: true },
-    { to: "/admin/users", label: "UTILISATEURS", icon: "users" },
-    { to: "/admin/motors", label: "MOTEURS", icon: "microchip" },
-    { to: "/admin/completed", label: "MOTEURS TERMINÉS", icon: "check-circle" },
-    { to: "/admin/types", label: "TYPES MOTEURS", icon: "cubes" },
-    { to: "/admin/faults", label: "PANNES & DIAGNOSTICS", icon: "stethoscope" },
-    { to: "/admin/reports", label: "RAPPORTS", icon: "file-alt", badge: unread },
-    { to: "/admin/messages", label: "MESSAGES", icon: "envelope" },
-    { to: "/admin/profile", label: "PROFIL ADMIN", icon: "user-shield" },
+    { to: "/admin", label: "Tableau de bord", icon: "chart-pie", end: true },
+    { to: "/admin/motors", label: "Moteurs", icon: "microchip", badge: validations, badgeLabel: (n) => `${n} demande${n > 1 ? "s" : ""} de validation` },
+    { to: "/admin/completed", label: "Moteurs terminés", icon: "check-circle" },
+    { to: "/admin/reports", label: "Rapports", icon: "file-alt", badge: unread },
+    { to: "/admin/clients", label: "Clients", icon: "address-book" },
+    { to: "/admin/quotes", label: "Devis", icon: "file-signature" },
+    { to: "/admin/invoices", label: "Factures", icon: "file-invoice-dollar" },
+    { to: "/admin/messages", label: "Demandes du site", icon: "envelope" },
+    { to: "/admin/types", label: "Types de moteurs", icon: "cubes" },
+    { to: "/admin/faults", label: "Pannes et diagnostics", icon: "stethoscope" },
+    { to: "/admin/users", label: "Utilisateurs", icon: "users" },
+    { to: "/admin/settings", label: "Paramètres", icon: "building" },
+    { to: "/admin/profile", label: "Mon profil", icon: "user-shield" },
   ];
 
   return (
@@ -70,7 +86,7 @@ export default function AdminApp() {
       brandSuffix="Elec"
       items={nav}
       onLogout={() => {
-        logout();
+        void logout();
         navigate("/admin");
       }}
     >
@@ -84,6 +100,15 @@ export default function AdminApp() {
         <Route path="faults" element={<FaultTypes />} />
         <Route path="reports" element={<Reports />} />
         <Route path="messages" element={<Messages />} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="clients/:id" element={<ClientDetail />} />
+        <Route path="quotes" element={<Quotes />} />
+        <Route path="quotes/new" element={<QuoteEditor />} />
+        <Route path="quotes/:id" element={<QuoteEditor />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="invoices/new" element={<InvoiceDetail />} />
+        <Route path="invoices/:id" element={<InvoiceDetail />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<AdminProfile admin={admin} />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>

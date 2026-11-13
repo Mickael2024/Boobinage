@@ -109,9 +109,9 @@ export function FaultTypes() {
 
   return (
     <>
-      <PageHeader title="PANNES & DIAGNOSTICS" icon="stethoscope">
+      <PageHeader title="Pannes & diagnostics" icon="stethoscope">
         <Button icon="plus" onClick={() => setForm({ open: true })}>
-          NOUVELLE PANNE
+          Nouvelle panne
         </Button>
       </PageHeader>
       <p className="-mt-2 mb-5 max-w-[760px] text-[0.9rem] text-ink-2">

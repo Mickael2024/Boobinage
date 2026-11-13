@@ -2,7 +2,15 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { createPortal } from "react-dom";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
+import { FOCUS_RING } from "./styles";
 import { useToast } from "./Toast";
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Éléments focusables et visibles d'un conteneur, dans l'ordre du document. */
+function focusables(root: HTMLElement) {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length > 0 && !el.closest("[inert]"));
+}
 
 export interface ModalProps {
   open: boolean;
@@ -19,6 +27,7 @@ export interface ModalProps {
   cancelText?: string | null;
 }
 
+/** Fenêtre modale (formulaire) : piège de focus, Échap, retour du focus à l'élément d'origine. */
 export function Modal({ open, onClose, title, icon = "question", wide, children, onConfirm, confirmText = "Confirmer", confirmVariant = "primary", cancelText = "Annuler" }: ModalProps) {
   const notify = useToast();
   const titleId = useId();
@@ -33,7 +42,34 @@ export function Modal({ open, onClose, title, icon = "question", wide, children,
     if (!open) return;
     const prevFocus = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !e.defaultPrevented && closeRef.current();
+    const onKey = (e: KeyboardEvent) => {
+      const el = panel.current;
+      if (!el || e.defaultPrevented) return;
+      // seules les touches de la fenêtre la plus haute sont traitées (fenêtres empilées)
+      const dialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+      if (dialogs[dialogs.length - 1] !== el) return;
+      if (e.key === "Escape") {
+        closeRef.current();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // piège de focus : Tab / Maj+Tab bouclent dans la fenêtre
+      const items = focusables(el);
+      if (!items.length) return e.preventDefault();
+      const first = items[0];
+      const last = items[items.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !el.contains(current)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && current === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && current === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     // focus sur le premier champ, sinon sur le bouton principal
     requestAnimationFrame(() => {
@@ -67,7 +103,7 @@ export function Modal({ open, onClose, title, icon = "question", wide, children,
 
   return createPortal(
     <div className="fixed inset-0 z-[5000] grid place-items-center p-4">
-      <div className="absolute inset-0 animate-[fade-in_0.15s_ease] bg-[rgba(28,31,35,0.55)] backdrop-blur-sm" onClick={onClose} />
+      <div aria-hidden className="absolute inset-0 animate-[fade-in_0.15s_ease] bg-overlay backdrop-blur-sm" onClick={onClose} />
       <form
         ref={panel}
         onSubmit={submit}
@@ -77,10 +113,10 @@ export function Modal({ open, onClose, title, icon = "question", wide, children,
         aria-labelledby={titleId}
         className={`relative flex max-h-[calc(100dvh-32px)] w-full animate-fade-in flex-col rounded-[20px] bg-white px-[18px] pt-[22px] pb-[18px] shadow-modal sm:px-7 sm:pt-7 sm:pb-[22px] ${wide ? "max-w-[640px]" : "max-w-[460px]"}`}
       >
-        <button type="button" onClick={onClose} aria-label="Fermer" className="absolute top-3.5 right-3.5 grid size-[34px] place-items-center rounded-lg text-ink-2 transition hover:bg-mist hover:text-ink">
+        <button type="button" onClick={onClose} aria-label="Fermer" className={`absolute top-3.5 right-3.5 grid size-[34px] place-items-center rounded-lg text-ink-2 transition hover:bg-mist hover:text-ink ${FOCUS_RING}`}>
           <Icon name="times" />
         </button>
-        <div className="mx-auto mb-3.5 grid size-[52px] shrink-0 place-items-center rounded-[14px] bg-primary text-2xl text-white">
+        <div aria-hidden className="mx-auto mb-3.5 grid size-[52px] shrink-0 place-items-center rounded-[14px] bg-primary text-2xl text-on-primary">
           <Icon name={icon} />
         </div>
         <h3 id={titleId} className="mb-3.5 shrink-0 text-center text-xl font-semibold">

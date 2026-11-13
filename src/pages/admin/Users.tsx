@@ -6,14 +6,19 @@ import { Field, PasswordInput } from "../../components/ui/Field";
 import { Modal } from "../../components/ui/Modal";
 import { Select } from "../../components/ui/Select";
 import { useToast } from "../../components/ui/Toast";
-import { addActivity, deleteUser, getUserByEmail, getUsers, saveUser, updateUser } from "../../lib/db";
+import { addActivity, deleteUser, getUsers, updateUser } from "../../lib/db";
+import { accountErrorMessage, createTechnician, sendPasswordReset } from "../../lib/session";
 import { formatDate } from "../../lib/format";
 import { useAsync } from "../../lib/hooks";
 import type { SessionUser, User } from "../../lib/types";
 
 const STATUS = { approved: "Approuvé", pending: "En attente" };
 
-/** Création (user absent) et modification d'un compte technicien. */
+/**
+ * Création (user absent) et modification d'un compte technicien.
+ * Le mot de passe est géré par Firebase Auth : à la création seulement ;
+ * ensuite, réinitialisation par email (bouton « Réinitialiser le mot de passe »).
+ */
 function UserFormModal({ user, open, onClose, onSaved, company }: { user?: User; open: boolean; onClose: () => void; onSaved: () => void; company: string }) {
   const notify = useToast();
   const editing = !!user;
@@ -37,22 +42,22 @@ function UserFormModal({ user, open, onClose, onSaved, company }: { user?: User;
   const save = async () => {
     const data = { name: name.trim(), email: email.trim(), approved: status === "approved" };
     if (!data.name) return notify("Le nom est obligatoire", "warning"), false;
-    if (!/^\S+@\S+\.\S+$/.test(data.email)) return notify("Email invalide", "warning"), false;
-    if ((!editing || password) && password.length < 6) return notify("Mot de passe : 6 caractères minimum", "warning"), false;
-    if (!editing || data.email !== user.email) {
-      const existing = await getUserByEmail(data.email);
-      if (existing && existing.id !== user?.id) return notify("Cet email est déjà utilisé", "error"), false;
-    }
-    const payload = password ? { ...data, password } : data;
-    if (editing) {
-      await updateUser(user.id, payload);
-      await addActivity({ type: "user_updated", userId: user.id, description: `Compte modifié : ${data.name}` });
-      notify("Utilisateur modifié", "success");
-    } else {
-      // l'entreprise du salarié = celle de l'admin
-      const saved = await saveUser({ ...payload, company, role: "user" });
-      await addActivity({ type: "user_created", userId: saved.id, description: `Compte créé par l'admin : ${data.name}` });
-      notify("Compte créé", "success");
+    try {
+      if (editing) {
+        await updateUser(user.id, { name: data.name, approved: data.approved });
+        await addActivity({ type: "user_updated", userId: user.id, description: `Compte modifié : ${data.name}` });
+        notify("Utilisateur modifié", "success");
+      } else {
+        if (!/^\S+@\S+\.\S+$/.test(data.email)) return notify("Email invalide", "warning"), false;
+        if (password.length < 6) return notify("Mot de passe : 6 caractères minimum", "warning"), false;
+        // l'entreprise du salarié = celle de l'admin
+        const saved = await createTechnician({ ...data, password, company });
+        await addActivity({ type: "user_created", userId: saved.id, description: `Compte créé par l'admin : ${data.name}` });
+        notify("Compte créé", "success");
+      }
+    } catch (e) {
+      console.error(e);
+      return notify(accountErrorMessage(e, "Enregistrement impossible"), "error"), false;
     }
     onSaved();
   };
@@ -63,7 +68,8 @@ function UserFormModal({ user, open, onClose, onSaved, company }: { user?: User;
         <input id="uf-name" className="field-input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
       </Field>
       <Field label="Email *" htmlFor="uf-email">
-        <input id="uf-email" type="email" className="field-input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" />
+        <input id="uf-email" type="email" className="field-input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" disabled={editing} />
+        {editing && <p className="mt-1 text-[0.85rem] text-ink-3">L'email de connexion se modifie dans la console Firebase (Authentication).</p>}
       </Field>
       <Field label="Statut du compte" htmlFor="uf-status">
         <Select
@@ -76,9 +82,11 @@ function UserFormModal({ user, open, onClose, onSaved, company }: { user?: User;
           ]}
         />
       </Field>
-      <Field label={editing ? "Nouveau mot de passe" : "Mot de passe *"} htmlFor="uf-password">
-        <PasswordInput id="uf-password" autoComplete="new-password" placeholder={editing ? "Laisser vide pour ne pas changer" : "6 caractères minimum"} value={password} onChange={(e) => setPassword(e.target.value)} />
-      </Field>
+      {!editing && (
+        <Field label="Mot de passe initial *" htmlFor="uf-password">
+          <PasswordInput id="uf-password" autoComplete="new-password" placeholder="6 caractères minimum" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+      )}
     </Modal>
   );
 }
@@ -92,12 +100,12 @@ export function Users({ admin }: { admin: SessionUser }) {
 
   return (
     <>
-      <PageHeader title="GESTION UTILISATEURS" icon="users-cog">
+      <PageHeader title="Gestion des utilisateurs" icon="users-cog">
         <Button variant="secondary" icon="sync-alt" onClick={reload}>
-          ACTUALISER
+          Actualiser
         </Button>
         <Button icon="user-plus" onClick={() => setForm({ open: true })}>
-          NOUVEL UTILISATEUR
+          Nouvel utilisateur
         </Button>
       </PageHeader>
 
@@ -120,6 +128,26 @@ export function Users({ admin }: { admin: SessionUser }) {
                 <div className="flex gap-1.5">
                   <IconButton icon="eye" label="Voir" onClick={() => setDetails(u)} />
                   <IconButton icon="pen" label="Modifier" onClick={() => setForm({ open: true, user: u })} />
+                  <IconButton
+                    icon="key"
+                    label="Réinitialiser le mot de passe"
+                    onClick={() =>
+                      confirm({
+                        title: "Réinitialiser le mot de passe",
+                        message: `Envoyer à ${u.email} un email pour choisir un nouveau mot de passe ?`,
+                        icon: "key",
+                        confirmText: "Envoyer",
+                        onConfirm: async () => {
+                          try {
+                            await sendPasswordReset(u.email);
+                            notify("Email de réinitialisation envoyé", "success");
+                          } catch (e) {
+                            notify(accountErrorMessage(e, "Envoi impossible"), "error");
+                          }
+                        },
+                      })
+                    }
+                  />
                   {!u.approved && (
                     <IconButton
                       icon="check"
@@ -139,7 +167,7 @@ export function Users({ admin }: { admin: SessionUser }) {
                     onClick={() =>
                       confirm({
                         title: "Supprimer",
-                        message: "Supprimer cet utilisateur ? Cette action est définitive.",
+                        message: "Supprimer cet utilisateur ? Il perd immédiatement tout accès. Supprimez aussi son compte dans la console Firebase (Authentication) pour libérer l'email.",
                         icon: "trash",
                         confirmText: "Supprimer",
                         danger: true,

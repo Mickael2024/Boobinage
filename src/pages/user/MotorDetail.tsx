@@ -6,7 +6,10 @@ import { ReportDetailModal } from "../../components/motor/ReportDetail";
 import { useConfirm } from "../../components/ui/Confirm";
 import { BackButton, Empty, Loading } from "../../components/ui/Display";
 import { useToast } from "../../components/ui/Toast";
-import { getMotorById, getReportsByMotor, updateMotorSubstep } from "../../lib/db";
+import { getMotorById, getReportsByMotor, requestMotorValidation, updateMotorSubstep } from "../../lib/db";
+import { formatDate } from "../../lib/format";
+import { Button } from "../../components/ui/Button";
+import { Icon } from "../../components/ui/Icon";
 import { useAsync } from "../../lib/hooks";
 import type { MotorStep, SessionUser } from "../../lib/types";
 import { ReportFormModal } from "./ReportFormModal";
@@ -36,15 +39,27 @@ export function MotorDetail({ user }: { user: SessionUser }) {
     setData((d) => d && { ...d, motor: updated });
     notify(checked ? "Sous-étape complétée" : "Sous-étape décochée", "info");
     const s = updated.steps.find((x) => x.id === step.id);
-    if (s?.completed && !s.validated)
+    if (s?.completed && !s.validated && !updated.validationRequestedAt)
       confirm({
-        title: "Demande validation",
-        message: `L'étape "${s.name}" est complète. Demander validation admin ?`,
+        title: "Demander la validation",
+        message: `L'étape « ${s.name} » est complète. Demander sa validation à l'administrateur ?`,
         icon: "check-circle",
         confirmText: "Demander",
         cancelText: "Plus tard",
-        onConfirm: () => notify("Demande envoyée", "success"),
+        onConfirm: requestValidation,
       });
+  };
+
+  /** Enregistre la demande (validationRequestedAt) : l'admin la voit en pastille sur « Moteurs ». */
+  const requestValidation = async () => {
+    try {
+      const at = await requestMotorValidation(id);
+      setData((d) => (d?.motor ? { ...d, motor: { ...d.motor, validationRequestedAt: at } } : d));
+      notify("Demande de validation envoyée", "success");
+    } catch (e) {
+      console.error(e);
+      notify("Envoi de la demande impossible", "error");
+    }
   };
 
   if (loading && !data) return <Loading />;
@@ -54,10 +69,26 @@ export function MotorDetail({ user }: { user: SessionUser }) {
     <>
       <div className="mb-6 flex flex-wrap items-center gap-4 sm:gap-6">
         <BackButton onClick={() => navigate("/user")} />
-        <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">SUIVI - {motor.clientName || "Sans nom"}</h2>
+        <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">Suivi — {motor.orNumber ? `${motor.orNumber} · ` : ""}{motor.clientName || "Sans nom"}</h2>
       </div>
       <div className="panel p-4 sm:p-6">
         <MotorInfoCard motor={motor} />
+        {motor.validationRequestedAt ? (
+          <p className="mb-5 flex items-center gap-2 rounded-[10px] border border-primary-line bg-primary-soft px-4 py-3 text-[0.9rem] text-primary-dark">
+            <Icon name="paper-plane" /> Validation demandée le {formatDate(motor.validationRequestedAt)}.
+          </p>
+        ) : (
+          motor.steps.some((s) => s.completed && !s.validated) && (
+            <div className="mb-5 flex flex-col gap-3 rounded-[10px] border border-warning bg-warning-soft px-4 py-3 text-[0.9rem] text-warning-dark sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                <Icon name="clock" /> Des étapes complétées attendent la validation de l'administrateur.
+              </span>
+              <Button size="sm" icon="paper-plane" onClick={requestValidation}>
+                Demander la validation
+              </Button>
+            </div>
+          )
+        )}
         <MotorDiagnostic motor={motor} />
         <div className="flex flex-col gap-4">
           {motor.steps.map((step) => (

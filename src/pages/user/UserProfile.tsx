@@ -9,7 +9,7 @@ export function UserProfile({ user }: { user: SessionUser }) {
   const navigate = useNavigate();
   return (
     <>
-      <PageHeader title="MON PROFIL" subtitle="Informations de votre compte" icon="user-gear" />
+      <PageHeader title="Mon profil" subtitle="Informations de votre compte" icon="user-gear" />
       <div className="panel mx-auto max-w-[640px] p-6 shadow-card sm:p-8">
         <div className="mx-auto mb-6 grid size-20 place-items-center rounded-full bg-primary-soft text-3xl text-primary">
           <Icon name="user" />
@@ -28,7 +28,7 @@ export function UserProfile({ user }: { user: SessionUser }) {
         </div>
         <div className="mt-5">
           <Button variant="secondary" icon="arrow-left" onClick={() => navigate("/user")}>
-            RETOUR
+            Retour
           </Button>
         </div>
       </div>

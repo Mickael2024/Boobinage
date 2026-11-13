@@ -31,7 +31,7 @@ export function ReportDetailModal({ reportId, onClose }: { reportId: string | nu
         <Loading />
       ) : (
         <div>
-          <h4 className="mb-1 text-[1.05rem] font-semibold text-primary">Rapport - {r.stepName}</h4>
+          <h4 className="mb-1 text-[1.05rem] font-semibold text-primary-dark">Rapport - {r.stepName}</h4>
           <p className="text-ink-2">
             Moteur : {data.motor?.clientName || r.motorClient} | Envoyé par : {r.userName} | {formatDate(r.createdAt)}
           </p>

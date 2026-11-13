@@ -1,13 +1,16 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ReportDetailModal } from "../../components/motor/ReportDetail";
 import { Button, IconButton } from "../../components/ui/Button";
 import { useConfirm } from "../../components/ui/Confirm";
 import { Badge, Empty, Loading, PageHeader } from "../../components/ui/Display";
 import { Icon } from "../../components/ui/Icon";
+import { Pagination, usePagination } from "../../components/ui/Pagination";
+import { SearchInput } from "../../components/ui/SearchInput";
 import { Select } from "../../components/ui/Select";
 import { useToast } from "../../components/ui/Toast";
+import { Truncate } from "../../components/ui/Truncate";
 import { deleteReport, getReports, updateReport } from "../../lib/db";
-import { formatDate, REPORT_STATUS_LABELS } from "../../lib/format";
+import { formatDate, matchesSearch, REPORT_STATUS_LABELS } from "../../lib/format";
 import { useAsync } from "../../lib/hooks";
 import type { ReportStatus } from "../../lib/types";
 
@@ -26,7 +29,12 @@ export function Reports() {
   const [open, setOpen] = useState<string | null>(null);
   const close = useCallback(() => setOpen(null), []);
   const { data, loading, setData } = useAsync(getReports);
-  const reports = (data ?? []).filter((r) => filter === "all" || r.status === filter);
+  const [search, setSearch] = useState("");
+  const reports = useMemo(
+    () => (data ?? []).filter((r) => (filter === "all" || r.status === filter) && matchesSearch(search, r.stepName, r.motorClient, r.userName, r.description, r.measurements)),
+    [data, filter, search],
+  );
+  const pager = usePagination(reports, 12);
 
   const setStatus = async (id: string, status: ReportStatus, message: string) => {
     await updateReport(id, { status });
@@ -36,21 +44,24 @@ export function Reports() {
 
   return (
     <>
-      <PageHeader title="RAPPORTS DES TECHNICIENS" icon="file-alt">
+      <PageHeader title="Rapports des techniciens" icon="file-alt" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput inline value={search} onChange={setSearch} placeholder="Étape, client, technicien, mesure…" />
         <Select inline aria-label="Filtrer par statut" value={filter} onChange={setFilter} options={FILTERS} />
-      </PageHeader>
+      </div>
 
       {loading && !data ? (
         <Loading />
       ) : !reports.length ? (
-        <Empty>Aucun rapport</Empty>
+        <Empty>{search || filter !== "all" ? "Aucun rapport ne correspond" : "Aucun rapport"}</Empty>
       ) : (
+        <>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {reports.map((r) => (
+          {pager.pageItems.map((r) => (
             <article key={r.id} className={`flex flex-col rounded-xl border bg-white p-5 shadow-xs ${r.status === "unread" ? "border-l-4 border-line border-l-warning" : "border-line"}`}>
               <header className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h4 className="font-semibold">
+                  <h4 className="font-semibold [overflow-wrap:anywhere]">
                     <Icon name="file-alt" className="text-primary" /> {r.stepName}
                   </h4>
                   <p className="text-[0.85rem] text-ink-2">
@@ -66,7 +77,11 @@ export function Reports() {
                 <p>
                   <strong>Date :</strong> {formatDate(r.createdAt)}
                 </p>
-                {r.description && <p>{r.description.substring(0, 100)}…</p>}
+                {r.description && (
+                  <p>
+                    <Truncate text={r.description} max={100} />
+                  </p>
+                )}
                 {!!r.photos?.length && (
                   <p>
                     <Icon name="image" /> {r.photos.length} photo(s)
@@ -120,6 +135,8 @@ export function Reports() {
             </article>
           ))}
         </div>
+        <Pagination page={pager.page} pageCount={pager.pageCount} onChange={pager.setPage} summary={pager.summary} />
+        </>
       )}
 
       <ReportDetailModal reportId={open} onClose={close} />

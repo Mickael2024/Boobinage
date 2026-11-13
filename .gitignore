@@ -3,3 +3,9 @@ dist
 *.local
 .env
 .DS_Store
+# clés de service Firebase (Admin SDK) : ne jamais commiter
+*serviceAccount*.json
+*service-account*.json
+*-firebase-adminsdk-*.json
+firebase-debug.log
+firestore-debug.log

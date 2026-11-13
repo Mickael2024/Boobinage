@@ -20,9 +20,9 @@ export function UserDashboard({ user }: { user: SessionUser }) {
 
   return (
     <>
-      <PageHeader title="TABLEAU DE BORD" subtitle={`Bienvenue, ${user.name.split(" ")[0] || "Technicien"}`}>
+      <PageHeader title="Tableau de bord" subtitle={`Bienvenue, ${user.name.split(" ")[0] || "Technicien"}`}>
         <Button icon="plus" onClick={() => navigate("/user/new")}>
-          NOUVEAU MOTEUR
+          Nouveau moteur
         </Button>
       </PageHeader>
 
@@ -35,7 +35,7 @@ export function UserDashboard({ user }: { user: SessionUser }) {
 
       <section className="panel p-4 sm:p-6">
         <h3 className="mb-4 flex items-center gap-2 text-[1.05rem] font-semibold">
-          <Icon name="list" className="text-primary" /> MOTEURS ENREGISTRÉS
+          <Icon name="list" className="text-primary" /> Moteurs enregistrés
         </h3>
         {loading && !motors ? (
           <Loading />
@@ -55,6 +55,8 @@ export function UserDashboard({ user }: { user: SessionUser }) {
                   <StatusPill status={m.status} />
                 </div>
                 <div className="space-y-0.5 text-[0.88rem] text-ink-2 [&_strong]:text-ink">
+                  {m.orNumber && <p className="font-mono text-[0.82rem]">{m.orNumber}</p>}
+                  {m.validationRequestedAt && <p className="text-primary-dark">Validation demandée</p>}
                   <p>
                     <strong>Puissance :</strong> <span className="font-mono">{m.power || "-"}</span> kW
                   </p>

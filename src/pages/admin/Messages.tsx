@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, IconButton } from "../../components/ui/Button";
 import { useConfirm } from "../../components/ui/Confirm";
-import { Badge, Empty, Loading, PageHeader } from "../../components/ui/Display";
+import { Badge, Empty, PageHeader } from "../../components/ui/Display";
 import { Icon } from "../../components/ui/Icon";
+import { Pagination, usePagination } from "../../components/ui/Pagination";
+import { SearchInput } from "../../components/ui/SearchInput";
 import { Select } from "../../components/ui/Select";
+import { SkeletonRows } from "../../components/ui/Skeleton";
+import { FOCUS_RING } from "../../components/ui/styles";
 import { useToast } from "../../components/ui/Toast";
-import { deleteWebRequest, getWebRequests, setWebRequestStatus } from "../../lib/db";
-import { couplingLabel, formatDate, MESSAGE_STATUS_LABELS } from "../../lib/format";
+import { createClient, deleteWebRequest, getClients, getWebRequests, setWebRequestStatus } from "../../lib/db";
+import { couplingLabel, formatDate, matchesSearch, MESSAGE_STATUS_LABELS } from "../../lib/format";
 import { useAsync } from "../../lib/hooks";
+import BRAND from "../../lib/brand";
 import type { MessageStatus, WebRequest } from "../../lib/types";
 
 const FILTERS = [
@@ -19,12 +25,11 @@ const FILTERS = [
 ];
 const TONE = { new: "warning", read: "info", replied: "success", archived: "neutral" } as const;
 
-const linkCls =
-  "inline-flex items-center gap-2 rounded-[10px] border border-primary-dark bg-primary px-3.5 py-1.5 text-[0.8rem] font-semibold text-white transition hover:bg-primary-dark";
+const linkCls = `inline-flex items-center gap-2 rounded-[10px] border border-primary-border bg-primary px-3.5 py-1.5 text-[0.8rem] font-semibold text-on-primary transition hover:bg-primary-light ${FOCUS_RING}`;
 
 function mailto(msg: WebRequest) {
-  const subject = "Fortico Rewind - Votre demande de devis";
-  const body = `Bonjour ${msg.clientName || ""},\n\nNous avons bien reçu votre demande de devis.\n\nNotre équipe vous contactera dans les plus brefs délais.\n\nCordialement,\n\nFortico Rewind`;
+  const subject = `${BRAND.name} - Votre demande de devis`;
+  const body = `Bonjour ${msg.clientName || ""},\n\nNous avons bien reçu votre demande de devis.\n\nNotre équipe vous contactera dans les plus brefs délais.\n\nCordialement,\n\n${BRAND.name}`;
   return `mailto:${msg.clientEmail || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
@@ -33,9 +38,41 @@ const kind = (t?: string) => (t === "three_phase" ? "Triphasé" : t === "single_
 export function Messages() {
   const notify = useToast();
   const confirm = useConfirm();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const { data, loading, error, reload, setData } = useAsync(getWebRequests);
-  const messages = (data ?? []).filter((m) => filter === "all" || m.status === filter);
+  const messages = useMemo(
+    () => (data ?? []).filter((m) => (filter === "all" || m.status === filter) && matchesSearch(search, m.clientName, m.clientEmail, m.clientPhone, m.clientCompany, m.description, m.power)),
+    [data, filter, search],
+  );
+  const pager = usePagination(messages, 10);
+
+  /** Fiche client (existante si même email / téléphone, sinon créée) puis éditeur de devis pré-rempli. */
+  const convert = async (msg: WebRequest) => {
+    try {
+      const clients = await getClients();
+      const digits = (s?: string) => (s ?? "").replace(/\D/g, "");
+      const email = (msg.clientEmail ?? "").trim().toLowerCase();
+      let client = clients.find((c) => (email && (c.email ?? "").toLowerCase() === email) || (digits(msg.clientPhone).length >= 6 && digits(c.phone) === digits(msg.clientPhone)));
+      if (!client) {
+        client = await createClient({
+          name: (msg.clientName || "Client du site").trim(),
+          company: msg.clientCompany?.trim() || "",
+          phone: msg.clientPhone?.trim() || "",
+          email: msg.clientEmail?.trim() || "",
+          address: msg.clientAddress?.trim() || "",
+          notes: "Créé depuis une demande de devis du site",
+        });
+        notify(`Fiche client « ${client.name} » créée`, "success");
+      } else notify(`Fiche client existante utilisée : ${client.name}`, "info");
+      if (msg.status === "new") await setWebRequestStatus(msg.id, "read");
+      navigate(`/admin/quotes/new?client=${client.id}&request=${msg.id}`);
+    } catch (e) {
+      console.error(e);
+      notify("Conversion impossible", "error");
+    }
+  };
 
   const setStatus = async (id: string, status: MessageStatus, message: string) => {
     await setWebRequestStatus(id, status);
@@ -45,22 +82,27 @@ export function Messages() {
 
   return (
     <>
-      <PageHeader title="DEMANDES DE DEVIS (WEB)" icon="envelope">
-        <Select inline aria-label="Filtrer par statut" value={filter} onChange={setFilter} options={FILTERS} />
+      <PageHeader title="Demandes de devis (web)" icon="envelope">
         <Button icon="sync-alt" onClick={reload}>
-          ACTUALISER
+          Actualiser
         </Button>
       </PageHeader>
 
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput inline value={search} onChange={setSearch} placeholder="Nom, email, téléphone, panne…" />
+        <Select inline aria-label="Filtrer par statut" value={filter} onChange={setFilter} options={FILTERS} />
+      </div>
+
       {loading && !data ? (
-        <Loading />
+        <SkeletonRows />
       ) : error && !data ? (
         <Empty>Erreur de chargement</Empty>
       ) : !messages.length ? (
-        <Empty>Aucune demande de devis</Empty>
+        <Empty>{search || filter !== "all" ? "Aucune demande ne correspond" : "Aucune demande de devis"}</Empty>
       ) : (
+        <>
         <div className="grid gap-4 lg:grid-cols-2">
-          {messages.map((msg) => (
+          {pager.pageItems.map((msg) => (
             <article key={msg.id} className={`flex flex-col rounded-xl border bg-white p-5 shadow-xs ${msg.status === "new" ? "border-l-4 border-line border-l-warning" : "border-line"}`}>
               <header className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-0.5 text-[0.88rem] text-ink-2 [&_i]:w-4 [&_i]:text-primary">
@@ -122,7 +164,16 @@ export function Messages() {
                     Archiver
                   </Button>
                 )}
-                <a href={mailto(msg)} className={linkCls}>
+                <Button size="sm" icon="file-signature" onClick={() => convert(msg)}>
+                  Créer client + devis
+                </Button>
+                <a
+                  href={mailto(msg)}
+                  className={linkCls}
+                  onClick={() => {
+                    if (msg.status === "new" || msg.status === "read") void setStatus(msg.id, "replied", "Demande marquée comme répondue");
+                  }}
+                >
                   <Icon name="envelope" /> Répondre
                 </a>
                 {msg.clientPhone && (
@@ -154,6 +205,8 @@ export function Messages() {
             </article>
           ))}
         </div>
+        <Pagination page={pager.page} pageCount={pager.pageCount} onChange={pager.setPage} summary={pager.summary} />
+        </>
       )}
     </>
   );

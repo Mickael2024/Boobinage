@@ -102,7 +102,7 @@ function StepsModal({ type, onClose, onChanged }: { type: MotorType | null; onCl
     return (
       <Modal key="edit" open onClose={() => setEditing(null)} title={editing.id ? "Modifier" : "Nouvelle étape"} icon={editing.id ? "edit" : "plus"} confirmText={editing.id ? "Enregistrer" : "Ajouter"} onConfirm={saveStep}>
         <Field label="Nom" htmlFor="st-name">
-          <input id="st-name" className="field-input" placeholder="Ex: DIAGNOSTIC" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+          <input id="st-name" className="field-input" placeholder="Ex. : Diagnostic" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
         </Field>
         <Field label="Sous-étapes (une par ligne)" htmlFor="st-subs">
           <textarea id="st-subs" rows={5} className="field-input" placeholder={"Identifier type\nVérifier panne"} value={editing.substeps} onChange={(e) => setEditing({ ...editing, substeps: e.target.value })} />
@@ -148,9 +148,9 @@ export function MotorTypes() {
 
   return (
     <>
-      <PageHeader title="TYPES DE MOTEURS" icon="cubes">
+      <PageHeader title="Types de moteurs" icon="cubes">
         <Button icon="plus" onClick={() => setForm({ open: true })}>
-          NOUVEAU TYPE
+          Nouveau type
         </Button>
       </PageHeader>
 

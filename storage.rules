@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Règles Storage — Jeff Elec
+// Les rôles sont lus dans Firestore (fortico_users/{uid}) : au premier déploiement, la console
+// Firebase demande d'autoriser Storage à lire Firestore (accepter).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function profile() {
+      return firestore.get(/databases/(default)/documents/fortico_users/$(request.auth.uid)).data;
+    }
+    function isAdmin() {
+      return request.auth != null && profile().role == 'admin';
+    }
+    function isTech() {
+      return request.auth != null && profile().role == 'user' && profile().approved == true;
+    }
+    function isImage(maxMb) {
+      return request.resource.size < maxMb * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Photos des rapports : reports/{reportId}/{fichier}.jpg (compressées côté client, ~300 Ko)
+    match /reports/{reportId}/{file} {
+      allow read: if isAdmin() || (isTech() && resource.metadata.uploadedBy == request.auth.uid);
+      allow create: if (isAdmin() || isTech())
+        && isImage(5)
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+      allow update: if false;
+      allow delete: if isAdmin() || (isTech() && resource.metadata.uploadedBy == request.auth.uid);
+    }
+
+    // Logo de l'entreprise (affiché sur le site public et les PDF)
+    match /company/{file} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isImage(2);
+      allow delete: if isAdmin();
+    }
+  }
+}

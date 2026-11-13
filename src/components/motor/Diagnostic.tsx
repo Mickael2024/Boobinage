@@ -10,7 +10,7 @@ export function DiagnosticList({ list }: { list?: DiagnosticTest[] }) {
     <ol className="mt-2.5 flex flex-col gap-2">
       {list.map((d, i) => (
         <li key={d.id ?? i} className="grid grid-cols-[28px_1fr] gap-x-3 rounded-[10px] border border-line bg-white px-3 py-2.5 text-[0.9rem]">
-          <span className="row-span-2 grid size-6 place-items-center rounded-full bg-primary-soft text-[0.75rem] font-bold text-primary">{i + 1}</span>
+          <span className="row-span-2 grid size-6 place-items-center rounded-full bg-primary-soft text-[0.75rem] font-bold text-primary-dark">{i + 1}</span>
           <span className="font-semibold text-ink">{d.title}</span>
           {d.expected && (
             <span className="col-start-2 mt-0.5 text-[0.82rem] text-ink-2">
@@ -27,7 +27,7 @@ function Box({ title, subtitle, children }: { title: string; subtitle?: string; 
   return (
     <div className="mt-1 mb-5 rounded-xl border border-primary-line bg-primary-soft px-[18px] py-4">
       <div className="mb-2 flex items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-primary text-white">
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-primary text-on-primary">
           <Icon name="stethoscope" />
         </span>
         <div>

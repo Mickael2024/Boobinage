@@ -4,42 +4,72 @@
 /* Mode sombre piloté par la classe .dark (site vitrine) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Palette atelier : anthracite #252A30 · orange industriel #F28C28 · vert #269B63 · alerte #E99A32 · rouge #D94B45 */
+/* Palette atelier : anthracite #252A30 · orange industriel #F28C28 · vert #269B63 · alerte #E99A32 · rouge #C43D37
+   Ratios WCAG (texte) calculés : voir commentaires. Ne jamais écrire de texte blanc sur bg-primary / bg-warning / bg-success :
+   utiliser text-on-primary (anthracite) ou les variantes « -dark ». */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  --color-primary: #f28c28;
-  --color-primary-dark: #d9731a;
-  --color-primary-light: #f5a34c;
+  --color-primary: #f28c28; /* fond de marque, icônes, bordures (2,45:1 sur blanc : jamais pour du petit texte) */
+  --color-primary-dark: #a14f0e; /* orange texte : 5,77 blanc · 5,15 primary-soft · 5,16 canvas · 4,84 mist */
+  --color-primary-border: #d9731a; /* bordure des boutons primaires */
+  --color-primary-light: #f5a34c; /* survol des boutons ; texte sur anthracite (7,04:1) */
   --color-primary-soft: #fdf0e2;
   --color-primary-line: #f6d9b8;
+  --color-on-primary: #1b1e22; /* texte sur primary 6,82:1 · sur primary-light 8,15:1 · sur warning 7,27:1 */
 
   --color-anthracite: #252a30;
   --color-anthracite-light: #343a40;
   --color-night: #1b1e22;
+  --color-fog: #b8bcc2; /* texte secondaire sur anthracite (7,58:1) */
+  --color-fog-light: #d4d7db; /* texte sur anthracite (10,0:1) */
 
-  --color-success: #269b63;
-  --color-success-dark: #1e7a4d;
+  --color-success: #269b63; /* icônes / bordures */
+  --color-success-dark: #1e7a4d; /* fond bouton (blanc 5,32:1) · texte sur success-soft 4,62:1 */
+  --color-success-deep: #17603c; /* survol bouton succès (blanc 7,57:1) */
   --color-success-soft: #e2f3e9;
   --color-warning: #e99a32;
-  --color-warning-dark: #8a5c14;
+  --color-warning-dark: #8a5c14; /* texte sur warning-soft 5,23:1 */
   --color-warning-soft: #fdf2df;
-  --color-danger: #d94b45;
+  --color-danger: #c43d37; /* blanc 5,16:1 · texte sur blanc 5,16:1 (ancien #d94b45 : 4,16:1) */
+  --color-danger-dark: #b3392f; /* texte sur danger-soft 4,86:1 · survol bouton (blanc 5,93:1) */
+  --color-danger-light: #efa7a3; /* texte « déconnexion » sur anthracite (7,38:1) */
   --color-danger-soft: #f9e4e2;
 
   --color-canvas: #f4f2ed;
   --color-mist: #edebe4;
+  --color-paper: #f7f5ef; /* en-têtes de tableau */
+  --color-row-hover: #fbfaf5;
   --color-ink: #252a30;
-  --color-ink-2: #565c63;
-  --color-ink-3: #8b9096;
+  --color-ink-2: #565c63; /* 6,76 blanc · 6,04 canvas */
+  --color-ink-3: #63686e; /* 5,62 blanc · 5,02 canvas · 4,71 mist (ancien #8b9096 : 3,22 / 2,88) */
   --color-line: #e5e2da;
+  --color-line-soft: #eceae2;
   --color-line-strong: #d4d1c8;
+  --color-line-hover: #d9b48c;
+  --color-overlay: rgb(28 31 35 / 0.55);
+
+  /* Site vitrine en mode sombre */
+  --color-dark-bg: #1a1d23;
+  --color-dark-deep: #161b22;
+  --color-dark-surface: #21252b;
+  --color-dark-field: #2c313a;
+  --color-dark-line: #30363d;
+  --color-dark-text: #e1e4e8; /* 12,1:1 sur dark-surface */
+  --color-dark-muted: #8b949e; /* 5,00:1 sur dark-surface · 4,25:1 sur dark-field (texte large uniquement) */
 
   --shadow-xs: 0 1px 2px rgba(37, 42, 48, 0.06);
   --shadow-card: 0 2px 4px rgba(37, 42, 48, 0.05), 0 8px 20px -6px rgba(37, 42, 48, 0.1);
   --shadow-pop: 0 4px 8px rgba(37, 42, 48, 0.05), 0 18px 36px -12px rgba(37, 42, 48, 0.16);
   --shadow-modal: 0 30px 80px -20px rgba(28, 31, 35, 0.55);
+  --shadow-button: 0 1px 2px rgba(37, 42, 48, 0.12);
+  --shadow-button-hover: 0 6px 14px -4px rgba(217, 115, 26, 0.4);
+  --shadow-nav: 0 6px 20px -8px rgba(28, 31, 35, 0.5);
+  --shadow-drawer: 12px 0 40px rgba(28, 31, 35, 0.45);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --shadow-float-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --shadow-float-dark: 0 4px 20px rgba(0, 0, 0, 0.3);
 
   --animate-slide-in: slide-in 0.3s ease;
   --animate-fade-in: fade-in 0.2s ease;
@@ -74,19 +104,34 @@
     line-height: 1.6;
   }
   h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.25; }
-  ::selection { background: var(--color-primary); color: #fff; }
-  * { scrollbar-width: thin; scrollbar-color: #cfcac0 transparent; }
+  ::selection { background: var(--color-primary); color: var(--color-on-primary); }
+  * { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+  /* Anneau de focus clavier par défaut pour tout élément interactif sans style dédié */
+  :where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), summary):focus-visible {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 2px;
+  }
+  /* Fonds sombres (mode sombre du site, barres anthracite) : anneau orange vif */
+  :is(.dark, .on-dark) :where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), summary):focus-visible {
+    outline-color: var(--color-primary);
+  }
   button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
 }
 
 @layer components {
   /* Champs de formulaire de l'application (technicien / admin) */
   .field-input {
-    @apply block min-h-11 w-full rounded-[10px] border border-line-strong bg-white px-4 py-2.5 text-[0.95rem] text-ink transition placeholder:text-ink-3 hover:border-[#d9b48c] focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20 disabled:bg-mist disabled:opacity-70;
+    @apply block min-h-11 w-full rounded-[10px] border border-line-strong bg-white px-4 py-2.5 text-[0.95rem] text-ink transition placeholder:text-ink-3 hover:border-line-hover focus:border-primary-border focus:outline-none focus:ring-3 focus:ring-primary/30 disabled:bg-mist disabled:opacity-70;
   }
   textarea.field-input { @apply resize-y leading-normal; }
   .field-label {
     @apply mb-1.5 block text-[0.78rem] font-semibold tracking-[0.04em] text-anthracite-light uppercase;
+  }
+  /* Grille technique discrète sur fond anthracite (accueil) */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(color-mix(in srgb, white 3.5%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, white 3.5%, transparent) 1px, transparent 1px);
   }
   .panel {
     @apply rounded-xl border border-line bg-white shadow-xs;

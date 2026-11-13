@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import type { Motor, MotorStep, Report } from "../../lib/types";
-import { formatDate, motorTypeLabel } from "../../lib/format";
+import { formatDate, formatDay, isMotorLate, motorTypeLabel, PRIORITY_LABELS } from "../../lib/format";
 import { Badge, StatusPill } from "../ui/Display";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { Truncate } from "../ui/Truncate";
 
 const Row = ({ children }: { children: ReactNode }) => <p className="[&_strong]:font-semibold [&_strong]:text-ink">{children}</p>;
 
@@ -11,7 +12,39 @@ export function MotorInfoCard({ motor, extended }: { motor: Motor; extended?: bo
   return (
     <div className="mb-6 space-y-1 rounded-[10px] bg-mist p-[18px] text-[0.92rem] text-ink-2">
       <Row>
-        <strong>Client :</strong> {motor.clientName || "-"} | <strong>Tél :</strong> {motor.clientPhone || "-"}
+        <strong>Dossier :</strong> <span className="font-mono">{motor.orNumber || "-"}</span>
+        {motor.serialNumber && (
+          <>
+            {" "}
+            | <strong>N° de série :</strong> <span className="font-mono">{motor.serialNumber}</span>
+          </>
+        )}
+      </Row>
+      <Row>
+        <strong>Client :</strong> {motor.clientName || "-"}
+        {motor.clientCompany && <> ({motor.clientCompany})</>} | <strong>Tél :</strong> {motor.clientPhone || "-"}
+        {motor.clientEmail && (
+          <>
+            {" "}
+            | <strong>Email :</strong> {motor.clientEmail}
+          </>
+        )}
+      </Row>
+      <Row>
+        <strong>Réception :</strong> {formatDay(motor.receivedAt || motor.createdAt)} | <strong>Promis le :</strong> {formatDay(motor.promisedAt)}
+        {isMotorLate(motor) && (
+          <>
+            {" "}
+            <Badge tone="danger">En retard</Badge>
+          </>
+        )}{" "}
+        | <strong>Priorité :</strong> {PRIORITY_LABELS[motor.priority ?? "normal"]}
+        {motor.warranty && (
+          <>
+            {" "}
+            | <Badge tone="info">Garantie{motor.warrantyNote ? ` : ${motor.warrantyNote}` : ""}</Badge>
+          </>
+        )}
       </Row>
       <Row>
         <strong>Technicien :</strong> {motor.technicianName || "-"} ({motor.technicianEmail || "-"})
@@ -61,7 +94,7 @@ export function StepCard({ step, onToggle, onValidate, onReport, reports = [], o
   return (
     <div className={`rounded-xl border border-line bg-white p-5 shadow-xs ${step.validated ? "border-l-4 border-l-success" : step.completed ? "border-l-4 border-l-warning" : ""}`}>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h4 className="font-semibold text-ink">{step.name}</h4>
+        <h4 className="min-w-0 font-semibold text-ink [overflow-wrap:anywhere]">{step.name}</h4>
         {step.validated ? (
           <Badge tone="success" icon="check-circle">Validé</Badge>
         ) : step.completed ? (
@@ -117,7 +150,7 @@ export function StepCard({ step, onToggle, onValidate, onReport, reports = [], o
               ))}
               {r.description && (
                 <button type="button" onClick={() => onOpenReport?.(r.id)} className="rounded-lg bg-mist px-3 py-2 text-left font-mono text-[0.78rem] text-ink-2 transition hover:bg-primary-soft">
-                  <Icon name="sticky-note" /> {r.description.substring(0, 50)}…
+                  <Icon name="sticky-note" /> <Truncate text={r.description} max={50} />
                 </button>
               )}
             </span>

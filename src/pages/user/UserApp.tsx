@@ -1,42 +1,38 @@
-import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { AppShell } from "../../components/layout/AppShell";
 import { LoginForm } from "../../components/layout/LoginForm";
 import { Loading } from "../../components/ui/Display";
-import { logout, useCurrentUser, validateRememberedSession } from "../../lib/session";
+import { logout, useAuthReady, useCurrentUser } from "../../lib/session";
 import { MotorDetail } from "./MotorDetail";
 import { MotorForm } from "./MotorForm";
 import { UserDashboard } from "./UserDashboard";
 import { UserProfile } from "./UserProfile";
 
 const NAV = [
-  { to: "/user", label: "TABLEAU DE BORD", icon: "chart-line", end: true },
-  { to: "/user/new", label: "NOUVEAU MOTEUR", icon: "plus-circle" },
-  { to: "/user/profile", label: "MON PROFIL", icon: "user-gear" },
+  { to: "/user", label: "Tableau de bord", icon: "chart-line", end: true },
+  { to: "/user/new", label: "Nouveau moteur", icon: "plus-circle" },
+  { to: "/user/profile", label: "Mon profil", icon: "user-gear" },
 ];
 
 export default function UserApp() {
   const user = useCurrentUser();
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+  const ready = useAuthReady();
 
-  useEffect(() => {
-    validateRememberedSession("user").finally(() => setChecking(false));
-  }, []);
-
-  if (checking) return <Loading />;
+  // Firebase Auth restaure la session (et vérifie le profil) avant l'affichage
+  if (!ready) return <Loading />;
 
   if (user?.role !== "user")
-    return <LoginForm role="user" icon="microchip" title="ACCÈS TECHNICIEN" note="Pas de compte ? Contactez votre administrateur pour en obtenir un." />;
+    return <LoginForm role="user" icon="microchip" title="Accès technicien" note="Pas de compte ? Contactez votre administrateur pour en obtenir un." />;
 
   return (
     <AppShell
       brandIcon="bolt"
       brandPrefix="Jeff Elec"
-      brandSuffix="USER"
+      brandSuffix="Atelier"
       items={NAV}
       onLogout={() => {
-        logout();
+        void logout();
         navigate("/user");
       }}
     >

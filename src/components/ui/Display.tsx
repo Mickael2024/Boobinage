@@ -2,18 +2,23 @@ import type { ReactNode } from "react";
 import type { MotorStatus } from "../../lib/types";
 import { STATUS_LABELS } from "../../lib/format";
 import { Icon } from "./Icon";
+import { FOCUS_RING, TABLE, TABLE_WRAP, TH } from "./styles";
+import { displayLabel } from "./text";
 
-type BadgeTone = "neutral" | "success" | "warning" | "info";
+export type BadgeTone = "neutral" | "success" | "warning" | "info" | "danger";
+/* Ratios texte/fond : neutral 5,67:1 · success 4,62:1 · warning 5,23:1 · info 5,15:1 · danger 4,86:1 */
 const BADGE: Record<BadgeTone, string> = {
   neutral: "border-line bg-mist text-ink-2",
   success: "border-transparent bg-success-soft text-success-dark",
   warning: "border-transparent bg-warning-soft text-warning-dark",
-  info: "border-transparent bg-primary-soft text-[#c96f17]",
+  info: "border-transparent bg-primary-soft text-primary-dark",
+  danger: "border-transparent bg-danger-soft text-danger-dark",
 };
 
-export function Badge({ tone = "neutral", icon, children }: { tone?: BadgeTone; icon?: string; children: ReactNode }) {
+/** Étiquette compacte colorée (statut, compteur) ; tone : neutral | success | warning | info | danger. */
+export function Badge({ tone = "neutral", icon, className = "", children }: { tone?: BadgeTone; icon?: string; className?: string; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[0.72rem] font-semibold tracking-[0.02em] whitespace-nowrap ${BADGE[tone]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[0.72rem] font-semibold tracking-[0.02em] whitespace-nowrap ${BADGE[tone] ?? BADGE.neutral} ${className}`}>
       {icon && <Icon name={icon} />}
       {children}
     </span>
@@ -21,8 +26,8 @@ export function Badge({ tone = "neutral", icon, children }: { tone?: BadgeTone; 
 }
 
 const STATUS_TONE: Record<MotorStatus, string> = {
-  pending: "border border-line bg-mist text-[#4c5157]",
-  in_progress: "bg-primary-soft text-[#c96f17]",
+  pending: "border border-line bg-mist text-ink-2",
+  in_progress: "bg-primary-soft text-primary-dark",
   completed: "bg-success-soft text-success-dark",
 };
 
@@ -37,43 +42,49 @@ export function StatusPill({ status, label }: { status: MotorStatus; label?: str
 
 type StatTone = "primary" | "warning" | "success";
 const STAT: Record<StatTone, { bar: string; icon: string }> = {
-  primary: { bar: "after:bg-primary", icon: "bg-primary-soft text-primary" },
-  warning: { bar: "after:bg-warning", icon: "bg-warning-soft text-[#b56d1c]" },
+  primary: { bar: "after:bg-primary", icon: "bg-primary-soft text-primary-dark" },
+  warning: { bar: "after:bg-warning", icon: "bg-warning-soft text-warning-dark" },
   success: { bar: "after:bg-success", icon: "bg-success-soft text-success-dark" },
 };
 
+/** Carte de chiffre clé ; devient un bouton (focusable) si onClick est fourni. */
 export function StatCard({ icon, value, label, tone = "primary", onClick }: { icon: string; value: ReactNode; label: string; tone?: StatTone; onClick?: () => void }) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      onClick={onClick}
-      className={`relative grid grid-cols-[auto_1fr] grid-rows-[auto_auto] items-center gap-x-4 overflow-hidden rounded-xl border border-line bg-white p-5 text-left shadow-xs transition after:absolute after:top-4 after:bottom-4 after:left-0 after:w-[3px] after:rounded-r after:content-[''] ${STAT[tone].bar} ${onClick ? "hover:-translate-y-[3px] hover:shadow-card" : ""}`}
-    >
+  const cls = `relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] items-center gap-x-4 overflow-hidden rounded-xl border border-line bg-white p-5 text-left shadow-xs transition after:absolute after:top-4 after:bottom-4 after:left-0 after:w-[3px] after:rounded-r after:content-[''] ${STAT[tone].bar}`;
+  const content = (
+    <>
       <span className={`row-span-2 grid size-[52px] place-items-center rounded-[14px] text-[22px] ${STAT[tone].icon}`}>
         <Icon name={icon} />
       </span>
       <span className="self-end font-mono text-[1.9rem] leading-[1.1] font-semibold tracking-[-0.01em] tabular-nums">{value}</span>
       <span className="self-start text-[0.72rem] font-semibold tracking-[0.05em] text-ink-2 uppercase">{label}</span>
-    </Tag>
+    </>
+  );
+  return onClick ? (
+    <button type="button" onClick={onClick} className={`${cls} hover:-translate-y-[3px] hover:shadow-card ${FOCUS_RING}`}>
+      {content}
+    </button>
+  ) : (
+    <div className={cls}>{content}</div>
   );
 }
 
+/** Grille responsive de StatCard (1 → 2 → 3/4 colonnes). */
 export function StatGrid({ children, cols = 4 }: { children: ReactNode; cols?: 3 | 4 }) {
   return <div className={`mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 ${cols === 4 ? "xl:grid-cols-4" : "lg:grid-cols-3"}`}>{children}</div>;
 }
 
-/** En-tête de page : titre, sous-titre, actions. */
+/** En-tête de page : titre (une chaîne en MAJUSCULES est affichée en casse normale), sous-titre, actions. */
 export function PageHeader({ title, subtitle, icon, children }: { title: ReactNode; subtitle?: ReactNode; icon?: string; children?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 border-b border-line pb-5 md:flex-row md:items-center md:justify-between">
       <div className="flex min-w-0 items-center gap-3">
         {icon && (
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-lg text-primary">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-lg text-primary-dark">
             <Icon name={icon} />
           </span>
         )}
         <div className="min-w-0">
-          <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">{title}</h2>
+          <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">{typeof title === "string" ? displayLabel(title) : title}</h2>
           {subtitle && <p className="text-[0.95rem] text-ink-2">{subtitle}</p>}
         </div>
       </div>
@@ -82,27 +93,29 @@ export function PageHeader({ title, subtitle, icon, children }: { title: ReactNo
   );
 }
 
+/** Message centré pour une liste vide. */
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="px-5 py-10 text-center text-ink-2">{children}</p>;
 }
 
+/** Indicateur de chargement de page (spinner centré). */
 export function Loading() {
   return (
     <div className="grid place-items-center py-16" role="status" aria-label="Chargement">
-      <span className="size-9 animate-spin rounded-full border-3 border-line border-t-primary" />
+      <span aria-hidden className="size-9 animate-spin rounded-full border-3 border-line border-t-primary" />
     </div>
   );
 }
 
-/** Tableau de données ; th/td stylés via sélecteurs descendants. */
+/** Tableau de données ; th/td stylés via sélecteurs descendants (voir ResponsiveTable pour le mode cartes sur mobile). */
 export function Table({ head, children }: { head: string[]; children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-white shadow-xs">
-      <table className="w-full border-collapse text-left text-[0.92rem] [&_td]:border-b [&_td]:border-[#eceae2] [&_td]:px-3.5 [&_td]:py-3 [&_td]:align-middle md:[&_td]:px-[18px] md:[&_td]:py-4 [&_td_small]:text-ink-2 [&_tbody_tr:hover_td]:bg-[#fbfaf5] [&_tbody_tr:last-child_td]:border-b-0">
+    <div className={TABLE_WRAP}>
+      <table className={TABLE}>
         <thead>
           <tr>
             {head.map((h) => (
-              <th key={h} className="sticky top-0 border-b-2 border-line-strong bg-[#f7f5ef] px-3.5 py-3.5 text-[0.72rem] font-bold tracking-[0.06em] whitespace-nowrap text-ink-2 uppercase md:px-[18px]">
+              <th key={h} scope="col" className={TH}>
                 {h}
               </th>
             ))}
@@ -128,9 +141,10 @@ export function DetailList({ rows }: { rows: [string, ReactNode][] }) {
   );
 }
 
-export function BackButton({ onClick, children = "RETOUR" }: { onClick: () => void; children?: ReactNode }) {
+/** Bouton « Retour » secondaire avec flèche. */
+export function BackButton({ onClick, children = "Retour" }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-2 rounded-[10px] border border-line-strong bg-white px-4 py-2 text-sm font-semibold text-ink shadow-xs transition hover:bg-mist">
+    <button type="button" onClick={onClick} className={`inline-flex items-center gap-2 rounded-[10px] border border-line-strong bg-white px-4 py-2 text-sm font-semibold text-ink shadow-xs transition hover:bg-mist ${FOCUS_RING}`}>
       <Icon name="arrow-left" />
       <span>{children}</span>
     </button>

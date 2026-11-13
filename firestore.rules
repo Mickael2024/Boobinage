@@ -1,0 +1,209 @@
+rules_version = '2';
+
+// Règles Firestore — Jeff Elec
+// Rôles lus dans le profil fortico_users/{uid} (uid Firebase Auth) :
+//   admin                      : tout
+//   technicien approuvé (user) : ses moteurs / rapports, lecture des modèles et pannes
+//   public (non connecté)      : création d'une demande de devis + lecture de settings/company
+// Tout ce qui n'est pas explicitement autorisé est refusé.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function userPath() {
+      return /databases/$(database)/documents/fortico_users/$(request.auth.uid);
+    }
+    function hasProfile() {
+      return signedIn() && exists(userPath());
+    }
+    function profile() {
+      return get(userPath()).data;
+    }
+    function isAdmin() {
+      return hasProfile() && profile().role == 'admin';
+    }
+    function isTech() {
+      return hasProfile() && profile().role == 'user' && profile().approved == true;
+    }
+    function isStaff() {
+      return isAdmin() || isTech();
+    }
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    function str(v, max) {
+      return v is string && v.size() <= max;
+    }
+    function optStr(data, key, max) {
+      return !(key in data) || str(data[key], max);
+    }
+
+    // Étape i : le technicien ne peut pas valider (validated: true) ni modifier une validation existante.
+    // Les règles n'ont pas de boucle : vérification déroulée sur 30 étapes maximum.
+    function stepOk(n, o, i) {
+      return i >= n.size()
+        || n[i].validated == false
+        || (i < o.size() && o[i].validated == true
+            && n[i].validatedAt == o[i].validatedAt
+            && n[i].validatedBy == o[i].validatedBy);
+    }
+    function noNewValidation(n, o) {
+      return n.size() <= 30
+        && stepOk(n, o, 0) && stepOk(n, o, 1) && stepOk(n, o, 2) && stepOk(n, o, 3) && stepOk(n, o, 4)
+        && stepOk(n, o, 5) && stepOk(n, o, 6) && stepOk(n, o, 7) && stepOk(n, o, 8) && stepOk(n, o, 9)
+        && stepOk(n, o, 10) && stepOk(n, o, 11) && stepOk(n, o, 12) && stepOk(n, o, 13) && stepOk(n, o, 14)
+        && stepOk(n, o, 15) && stepOk(n, o, 16) && stepOk(n, o, 17) && stepOk(n, o, 18) && stepOk(n, o, 19)
+        && stepOk(n, o, 20) && stepOk(n, o, 21) && stepOk(n, o, 22) && stepOk(n, o, 23) && stepOk(n, o, 24)
+        && stepOk(n, o, 25) && stepOk(n, o, 26) && stepOk(n, o, 27) && stepOk(n, o, 28) && stepOk(n, o, 29);
+    }
+
+    // ---------- Profils utilisateurs (id = uid) ----------
+    match /fortico_users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, delete: if isAdmin();
+      // l'utilisateur peut seulement resynchroniser son email avec celui de Firebase Auth
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && changed().hasOnly(['email', 'updatedAt'])
+            && request.resource.data.email == request.auth.token.email);
+    }
+
+    // ---------- Référentiels ----------
+    match /fortico_motor_types/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+    match /fortico_fault_types/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Moteurs ----------
+    match /fortico_motors/{id} {
+      allow read: if isAdmin() || (isTech() && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin()
+        || (isTech()
+            && request.resource.data.userId == request.auth.uid
+            && request.resource.data.status == 'pending'
+            && request.resource.data.steps is list
+            && noNewValidation(request.resource.data.steps, []));
+      allow update: if isAdmin()
+        || (isTech()
+            && resource.data.userId == request.auth.uid
+            && changed().hasOnly(['steps', 'status', 'updatedAt', 'completedAt', 'validationRequestedAt'])
+            && request.resource.data.status in ['pending', 'in_progress', resource.data.status]
+            && request.resource.data.steps.size() == resource.data.steps.size()
+            && noNewValidation(request.resource.data.steps, resource.data.steps)
+            && (!('completedAt' in changed()) || request.resource.data.completedAt == null)
+            && (!('validationRequestedAt' in changed()) || request.resource.data.validationRequestedAt is string));
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Rapports ----------
+    match /fortico_reports/{id} {
+      allow read: if isAdmin() || (isTech() && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin()
+        || (isTech()
+            && request.resource.data.userId == request.auth.uid
+            && request.resource.data.status == 'unread'
+            && (!('photos' in request.resource.data) || request.resource.data.photos.size() <= 10)
+            && get(/databases/$(database)/documents/fortico_motors/$(request.resource.data.motorId)).data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------- Journal d'activité ----------
+    match /fortico_activities/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (isTech() && request.resource.data.userId == request.auth.uid && str(request.resource.data.description, 500));
+    }
+
+    // ---------- Demandes de devis du site (création publique) ----------
+    match /fortico_web_requests/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly([
+            'clientName', 'clientEmail', 'clientPhone', 'clientCompany', 'clientAddress',
+            'motorType', 'description', 'status', 'createdAt',
+            'power', 'voltage', 'current', 'frequency', 'rpm', 'powerFactor',
+            'insulationClass', 'couplingType', 'poles'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time
+        && str(request.resource.data.clientName, 120) && request.resource.data.clientName.size() > 0
+        && optStr(request.resource.data, 'clientEmail', 200)
+        && optStr(request.resource.data, 'clientPhone', 40)
+        && optStr(request.resource.data, 'clientCompany', 120)
+        && optStr(request.resource.data, 'clientAddress', 300)
+        && optStr(request.resource.data, 'motorType', 80)
+        && optStr(request.resource.data, 'description', 5000)
+        && optStr(request.resource.data, 'power', 20)
+        && optStr(request.resource.data, 'voltage', 20)
+        && optStr(request.resource.data, 'current', 20)
+        && optStr(request.resource.data, 'frequency', 20)
+        && optStr(request.resource.data, 'rpm', 20)
+        && optStr(request.resource.data, 'powerFactor', 20)
+        && optStr(request.resource.data, 'insulationClass', 20)
+        && optStr(request.resource.data, 'couplingType', 20)
+        && optStr(request.resource.data, 'poles', 20);
+    }
+
+    // ---------- Paramètres (coordonnées lisibles par le site vitrine) ----------
+    match /settings/{docId} {
+      allow read: if docId == 'company' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Numérotation (counters/{type}-{année}) ----------
+    // Technicien : uniquement le compteur des dossiers OR, incrémenté de 1. Jamais supprimable.
+    match /counters/{counterId} {
+      allow read: if isAdmin() || (isTech() && counterId.matches('OR-[0-9]{4}'));
+      allow create: if isAdmin()
+        || (isTech() && counterId.matches('OR-[0-9]{4}')
+            && request.resource.data.keys().hasOnly(['value', 'updatedAt'])
+            && request.resource.data.value == 1);
+      allow update: if isAdmin()
+        || (isTech() && counterId.matches('OR-[0-9]{4}')
+            && changed().hasOnly(['value', 'updatedAt'])
+            && request.resource.data.value == resource.data.value + 1);
+      allow delete: if false;
+    }
+
+    // ---------- Gestion commerciale ----------
+    // Clients : le technicien peut consulter et créer (saisie d'un moteur), pas modifier/supprimer.
+    match /clients/{id} {
+      allow read: if isStaff();
+      allow create: if isAdmin()
+        || (isTech() && str(request.resource.data.name, 200) && request.resource.data.name.size() > 0);
+      allow update, delete: if isAdmin();
+    }
+
+    match /catalog/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /quotes/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Facture : modifiable seulement en brouillon. Émise : seuls règlement / statut / annulation évoluent.
+    match /invoices/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.status == 'draft'
+        && request.resource.data.number == null;
+      allow update: if isAdmin()
+        && (resource.data.status == 'draft'
+            || (changed().hasOnly(['amountPaid', 'creditedAmount', 'status', 'updatedAt', 'cancelledAt'])
+                && request.resource.data.status in ['issued', 'partially_paid', 'paid', 'cancelled']
+                && (resource.data.status != 'cancelled' || request.resource.data.status == 'cancelled')));
+      allow delete: if isAdmin() && resource.data.status == 'draft';
+    }
+
+    match /payments/{id} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

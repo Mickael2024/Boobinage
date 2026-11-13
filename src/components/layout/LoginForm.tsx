@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { authenticate } from "../../lib/session";
+import { authenticate, sendPasswordReset } from "../../lib/session";
 import type { Role } from "../../lib/types";
 import { Button } from "../ui/Button";
 import { IconInput, RememberMe } from "../ui/Field";
@@ -33,13 +33,20 @@ export function LoginForm({ role, icon, title, subtitle, note }: LoginFormProps)
     else notify(r.message, "error");
   };
 
+  const forgot = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return notify("Saisissez d'abord votre email", "warning");
+    // message identique que le compte existe ou non (pas d'énumération des comptes)
+    await sendPasswordReset(email).catch(() => undefined);
+    notify("Si un compte existe pour cet email, un lien de réinitialisation vient d'être envoyé", "info");
+  };
+
   return (
     <AuthCard icon={icon} title={title} subtitle={subtitle} accent={admin ? "warning" : "primary"}>
       <form onSubmit={submit}>
         <IconInput
           icon={admin ? "user-shield" : "envelope"}
           type="email"
-          placeholder={admin ? "EMAIL ADMINISTRATEUR" : "EMAIL"}
+          placeholder={admin ? "Email administrateur" : "Email"}
           aria-label="Email"
           autoComplete="username"
           required
@@ -49,7 +56,7 @@ export function LoginForm({ role, icon, title, subtitle, note }: LoginFormProps)
         <IconInput
           icon={admin ? "key" : "lock"}
           password
-          placeholder="MOT DE PASSE"
+          placeholder="Mot de passe"
           aria-label="Mot de passe"
           autoComplete="current-password"
           required
@@ -58,9 +65,12 @@ export function LoginForm({ role, icon, title, subtitle, note }: LoginFormProps)
         />
         <RememberMe checked={remember} onChange={setRemember} />
         <Button type="submit" block iconRight="arrow-right" loading={busy}>
-          AUTHENTIFICATION
+          Se connecter
         </Button>
       </form>
+      <button type="button" onClick={forgot} className="mt-4 block w-full text-center text-[0.88rem] text-ink-2 underline-offset-2 hover:underline">
+        Mot de passe oublié ?
+      </button>
       {note && <p className="mt-5 text-center text-[0.88rem] text-ink-2">{note}</p>}
     </AuthCard>
   );

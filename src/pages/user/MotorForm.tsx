@@ -8,20 +8,21 @@ import { Field } from "../../components/ui/Field";
 import { Icon } from "../../components/ui/Icon";
 import { Select } from "../../components/ui/Select";
 import { useToast } from "../../components/ui/Toast";
-import { getFaultTypes, getMotorTypes, saveMotor } from "../../lib/db";
+import { getClients, getFaultTypes, getMotorTypes, saveMotor } from "../../lib/db";
+import { fromInputDate, toInputDate } from "../../lib/format";
 import { useAsync } from "../../lib/hooks";
 import { MOTOR_KIND_OPTIONS, OTHER_TEMPLATE, withEmpty } from "../../lib/options";
-import type { MotorKind, NameplateSpecs, SessionUser } from "../../lib/types";
+import type { Client, MotorKind, NameplateSpecs, SessionUser } from "../../lib/types";
+import { MotorClientSection, MotorTrackingSection, type MotorClientFields, type MotorTrackingFields } from "../shared/MotorFields";
+
+const EMPTY_CLIENT: MotorClientFields = { clientId: "", clientName: "", clientPhone: "", clientCompany: "", clientAddress: "", clientEmail: "" };
+const newTracking = (): MotorTrackingFields => ({ serialNumber: "", receivedAt: toInputDate(new Date().toISOString()), promisedAt: "", priority: "normal", warranty: false, warrantyNote: "" });
 
 const EMPTY = {
   templateId: "",
   templateCustom: "",
   motorType: "" as MotorKind,
   motorTypeCustom: "",
-  clientName: "",
-  clientPhone: "",
-  clientCompany: "",
-  clientAddress: "",
   faultTypeId: "",
   faultDescription: "",
 };
@@ -45,11 +46,17 @@ export function MotorForm({ user }: { user: SessionUser }) {
   const notify = useToast();
   const [form, setForm] = useState(EMPTY);
   const [specs, setSpecs] = useState<NameplateSpecs>({});
+  const [client, setClient] = useState<MotorClientFields>(EMPTY_CLIENT);
+  const [tracking, setTracking] = useState<MotorTrackingFields>(newTracking);
+  const [newClients, setNewClients] = useState<Client[]>([]);
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<typeof EMPTY>) => setForm((f) => ({ ...f, ...patch }));
 
   const templates = useAsync(getMotorTypes);
   const faults = useAsync(getFaultTypes);
+  // fiches clients (lecture autorisée au technicien) ; en cas d'erreur, saisie libre seulement
+  const clients = useAsync(() => getClients().catch(() => [] as Client[]));
+  const clientList = clients.data ? [...clients.data, ...newClients.filter((c) => !clients.data!.some((x) => x.id === c.id))] : undefined;
 
   const templateOptions = useMemo(() => {
     const list = templates.data ?? [];
@@ -80,7 +87,7 @@ export function MotorForm({ user }: { user: SessionUser }) {
       couplingType: t.couplingType || "",
       poles: t.poles || "",
     });
-    notify("Template appliqué", "success");
+    notify("Modèle appliqué", "success");
   };
 
   const submit = async (e: FormEvent) => {
@@ -89,13 +96,14 @@ export function MotorForm({ user }: { user: SessionUser }) {
     const isOtherTemplate = form.templateId === OTHER_TEMPLATE;
     const templateCustom = isOtherTemplate ? form.templateCustom.trim() : "";
     const motorTypeCustom = form.motorType === "other" ? form.motorTypeCustom.trim() : "";
-    if (!form.clientName.trim() || !form.motorType) return notify("Client et type requis", "error");
+    if (!client.clientName.trim() || !form.motorType) return notify("Nom du client et type de moteur requis", "error");
+    if (tracking.promisedAt && tracking.receivedAt && tracking.promisedAt < tracking.receivedAt) return notify("La date promise précède la date de réception", "warning");
     if (isOtherTemplate && !templateCustom) return notify("Précisez le modèle du moteur", "warning");
     if (form.motorType === "other" && !motorTypeCustom) return notify("Précisez le type de moteur", "warning");
 
     setBusy(true);
     try {
-      await saveMotor({
+      const saved = await saveMotor({
         userId: user.id,
         templateId: form.templateId && !isOtherTemplate ? form.templateId : null,
         templateCustom,
@@ -104,16 +112,24 @@ export function MotorForm({ user }: { user: SessionUser }) {
         technicianName: user.name,
         technicianEmail: user.email,
         technicianCompany: user.company || "",
-        clientName: form.clientName,
-        clientPhone: form.clientPhone,
-        clientCompany: form.clientCompany,
-        clientAddress: form.clientAddress,
+        clientName: client.clientName.trim(),
+        clientPhone: client.clientPhone.trim(),
+        clientCompany: client.clientCompany.trim(),
+        clientAddress: client.clientAddress.trim(),
+        clientEmail: client.clientEmail.trim(),
+        ...(client.clientId ? { clientId: client.clientId } : {}),
+        serialNumber: tracking.serialNumber.trim(),
+        receivedAt: fromInputDate(tracking.receivedAt) || undefined,
+        promisedAt: fromInputDate(tracking.promisedAt) || undefined,
+        priority: tracking.priority,
+        warranty: tracking.warranty,
+        warrantyNote: tracking.warranty ? tracking.warrantyNote.trim() : "",
         faultDescription: form.faultDescription,
         // copie figée : la fiche garde le diagnostic tel qu'il était à la création, même si l'admin le modifie ensuite
         ...(fault ? { faultTypeId: fault.id, faultTypeName: fault.name, faultCategory: fault.category || "", diagnostic: (fault.diagnostic || []).map((d) => ({ title: d.title, expected: d.expected || "" })) } : {}),
         ...specs,
       });
-      notify("Moteur enregistré", "success");
+      notify(`Dossier ${saved.orNumber} enregistré`, "success");
       navigate("/user");
     } catch (err) {
       console.error(err);
@@ -130,18 +146,18 @@ export function MotorForm({ user }: { user: SessionUser }) {
     <>
       <div className="mb-6 flex flex-wrap items-center gap-4 sm:gap-6">
         <BackButton onClick={() => navigate("/user")} />
-        <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">NOUVEAU MOTEUR</h2>
+        <h2 className="text-[1.45rem] font-bold sm:text-[1.6rem]">Nouveau moteur</h2>
       </div>
 
       <form onSubmit={submit} noValidate className="panel p-5 shadow-card sm:p-8">
-        <Section icon="cube" title="TYPE DE MOTEUR">
+        <Section icon="cube" title="Type de moteur">
           <div className="grid gap-x-4 sm:grid-cols-2">
-            <Field label="MODÈLE PRÉDÉFINI" htmlFor="mf-template">
+            <Field label="Modèle prédéfini" htmlFor="mf-template">
               <Select id="mf-template" value={form.templateId} onChange={applyTemplate} options={templateOptions} />
               {form.templateId === OTHER_TEMPLATE &&
                 input("templateCustom", { placeholder: "Précisez le modèle", maxLength: 80, className: "field-input mt-2 animate-fade-in", "aria-label": "Précisez le modèle" })}
             </Field>
-            <Field label="TYPE *" htmlFor="mf-type">
+            <Field label="Type *" htmlFor="mf-type">
               <Select
                 id="mf-type"
                 value={form.motorType}
@@ -154,28 +170,22 @@ export function MotorForm({ user }: { user: SessionUser }) {
           </div>
         </Section>
 
-        <Section icon="user" title="INFORMATIONS CLIENT">
+        <Section icon="user" title="Client">
           <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-primary-line bg-primary-soft px-4 py-3 text-[0.9rem] text-primary-dark">
             <Icon name="user-check" />
             <span>
               Technicien responsable : <strong>{user.name}</strong> | <strong>{user.email}</strong>
             </span>
           </div>
-          <div className="grid gap-x-4 sm:grid-cols-2">
-            <Field label="NOM CLIENT *" htmlFor="mf-clientName">
-              {input("clientName", { placeholder: "Nom complet", required: true, autoComplete: "off" })}
-            </Field>
-            <Field label="TÉLÉPHONE" htmlFor="mf-clientPhone">
-              {input("clientPhone", { type: "tel", placeholder: "+33..." })}
-            </Field>
-            <Field label="ENTREPRISE" htmlFor="mf-clientCompany">
-              {input("clientCompany", { placeholder: "Nom entreprise" })}
-            </Field>
-            <Field label="ADRESSE" htmlFor="mf-clientAddress">
-              {input("clientAddress", { placeholder: "Adresse" })}
-            </Field>
-          </div>
-          <Field label="TYPE DE PANNE" htmlFor="mf-fault">
+          <MotorClientSection idPrefix="mf" value={client} onChange={(p) => setClient((c) => ({ ...c, ...p }))} clients={clientList} onClientCreated={(c) => setNewClients((l) => [...l, c])} compact />
+        </Section>
+
+        <Section icon="clipboard-list" title="Dossier atelier">
+          <MotorTrackingSection idPrefix="mf" value={tracking} onChange={(p) => setTracking((t) => ({ ...t, ...p }))} />
+        </Section>
+
+        <Section icon="stethoscope" title="Panne">
+          <Field label="Type de panne" htmlFor="mf-fault">
             <Select
               id="mf-fault"
               value={fault ? form.faultTypeId : ""}
@@ -184,21 +194,21 @@ export function MotorForm({ user }: { user: SessionUser }) {
             />
           </Field>
           {fault && <DiagnosticPreview fault={fault} />}
-          <Field label="DESCRIPTION PANNE" htmlFor="mf-faultDescription">
+          <Field label="Description de la panne" htmlFor="mf-faultDescription">
             <textarea id="mf-faultDescription" rows={3} className="field-input" placeholder="Décrivez le problème..." value={form.faultDescription} onChange={(e) => set({ faultDescription: e.target.value })} />
           </Field>
         </Section>
 
-        <Section icon="id-card" title="PLAQUE SIGNALÉTIQUE">
+        <Section icon="id-card" title="Plaque signalétique">
           <NameplateFields idPrefix="mf" value={specs} onChange={(p) => setSpecs((s) => ({ ...s, ...p }))} />
         </Section>
 
         <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={() => navigate("/user")}>
-            ANNULER
+            Annuler
           </Button>
           <Button type="submit" iconRight="save" loading={busy}>
-            ENREGISTRER
+            Enregistrer
           </Button>
         </div>
       </form>
