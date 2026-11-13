@@ -148,13 +148,6 @@ export function Settings() {
           {area("footer", "Pied de page des documents", 2, "Mentions légales, capital, etc. (par défaut : raison sociale + NIF/STAT/RCS)")}
         </Section>
 
-        <Section icon="globe" title="Site vitrine">
-          <div className="grid gap-x-4 sm:grid-cols-2">
-            {input("openingHours", "Horaires d'ouverture")}
-            {input("facebook", "Page Facebook")}
-          </div>
-          {input("mapUrl", "Carte Google Maps (URL « embed », vide = masquée)", { placeholder: "https://www.google.com/maps/embed?pb=…" })}
-        </Section>
 
         <div className="flex justify-end">
           <Button type="submit" iconRight="save" loading={busy}>

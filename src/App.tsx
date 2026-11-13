@@ -7,12 +7,10 @@ import { initializeStorage } from "./lib/db";
 import { Home } from "./pages/Home";
 
 // chaque espace est chargé à la demande
-const Site = lazy(() => import("./pages/Site"));
 const UserApp = lazy(() => import("./pages/user/UserApp"));
 const AdminApp = lazy(() => import("./pages/admin/AdminApp"));
 
 const TITLES: [string, string][] = [
-  ["/site", "Jeff Elec • Expert en Rebobinage de Moteurs Électriques"],
   ["/user", "Jeff Elec • Espace Technique"],
   ["/admin", "Jeff Elec • Administration"],
 ];
@@ -38,7 +36,6 @@ export function App() {
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/site" element={<Site />} />
               <Route path="/user/*" element={<UserApp />} />
               <Route path="/admin/*" element={<AdminApp />} />
               <Route path="*" element={<Navigate to="/" replace />} />

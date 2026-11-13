@@ -19,7 +19,6 @@ npm run test:rules   # tests des règles Firestore/Storage (émulateurs : Java +
 | URL           | Rôle                                          |
 | ------------- | --------------------------------------------- |
 | `#/`          | Accueil : choix espace technique / admin      |
-| `#/site`      | Site vitrine public + demande de devis        |
 | `#/user/...`  | Espace technicien (moteurs, étapes, rapports) |
 | `#/admin/...` | Supervision (utilisateurs, moteurs, pannes…)  |
 
@@ -33,7 +32,7 @@ Le routage utilise le hash (`#/…`) : le dossier `dist/` peut être déposé su
 - `src/lib/money.ts` : calculs HT/TVA/TTC en Ariary, `formatMGA`, montant en lettres
 - `src/lib/types.ts`, `format.ts`, `images.ts` (compression des photos), `pdf.ts`
 - `src/components/ui/` : boutons, listes déroulantes, modales, notifications…
-- `src/pages/` : écrans (accueil, site, `user/`, `admin/`)
+- `src/pages/` : écrans (accueil, `user/`, `admin/`)
 - `firestore.rules`, `storage.rules`, `firebase.json`, `.firebaserc` (projet `jeff-elec`)
 - `scripts/migrate-users.mjs` : migration des anciens comptes ; `scripts/rules.test.mjs` : tests des règles
 
