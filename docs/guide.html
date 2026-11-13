@@ -1,0 +1,96 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Guide d'utilisation - Jeff Elec</title>
+<style>
+@page{size:A4;margin:18mm 16mm}
+body{font-family:"DejaVu Sans",Arial,sans-serif;font-size:10.5pt;line-height:1.5;color:#1f2933}
+h1{font-size:26pt;color:#b45309;margin:0}
+h2{font-size:15pt;color:#fff;background:#b45309;padding:6px 12px;border-radius:4px;margin-top:22px;page-break-after:avoid}
+h3{font-size:12pt;color:#b45309;margin:16px 0 4px;page-break-after:avoid}
+.cover{text-align:center;padding-top:90mm;page-break-after:always}
+.cover p{color:#52606d;font-size:13pt}
+.box{border-left:4px solid #0ea5e9;background:#f0f9ff;padding:8px 12px;margin:10px 0;page-break-inside:avoid}
+.warn{border-color:#dc2626;background:#fef2f2}
+ol,ul{margin:4px 0 8px 20px;padding-left:10px}li{margin:2px 0}
+table{border-collapse:collapse;width:100%;margin:8px 0;page-break-inside:avoid}
+td,th{border:1px solid #cbd2d9;padding:5px 8px;text-align:left;vertical-align:top}th{background:#fde8c8}
+.pb{page-break-before:always}
+</style></head><body>
+<div class="cover"><h1>Jeff Elec</h1><p>Plateforme de gestion de rebobinage de moteurs</p><h1 style="font-size:20pt;color:#1f2933;margin-top:30px">Guide d'utilisation</h1><p>Espace Technique • Administration • Facturation</p></div>
+
+<h2>1. Présentation</h2>
+<p>Jeff Elec est une application web qui suit chaque moteur confié à l'atelier, de la réception au test final, puis gère les clients, devis, factures et paiements (en Ariary, TVA 20 %).</p>
+<table><tr><th>Espace</th><th>Pour qui ?</th><th>À quoi ça sert</th></tr>
+<tr><td>Espace Technique</td><td>Techniciens</td><td>Enregistrer les moteurs, cocher les étapes, envoyer des rapports avec photos.</td></tr>
+<tr><td>Administration</td><td>Responsable / patron</td><td>Superviser, valider, gérer clients, devis, factures, utilisateurs et paramètres.</td></tr></table>
+
+<h3>Se connecter</h3>
+<ol><li>Ouvrez l'application : la page d'accueil propose <b>Espace technique</b> ou <b>Administration</b>.</li>
+<li>Choisissez votre espace, saisissez votre <b>email</b> et votre <b>mot de passe</b>.</li>
+<li>Cochez « Se souvenir de moi » pour rester connecté 30 jours (à éviter sur un appareil partagé).</li></ol>
+<div class="box">Les comptes techniciens sont créés par l'administrateur. Un technicien doit être <b>approuvé</b> pour accéder à l'application.</div>
+<div class="box warn"><b>Erreur « invalid-credential » :</b> l'email ou le mot de passe est faux, ou le compte n'existe pas encore dans Firebase Authentication. Contactez l'administrateur.</div>
+
+<h2 class="pb">2. Espace Technique</h2>
+<p>Menu : <b>Tableau de bord</b>, <b>Nouveau moteur</b>, <b>Mon profil</b>.</p>
+<h3>2.1 Enregistrer un nouveau moteur</h3>
+<ol><li>Cliquez sur <b>Nouveau moteur</b>.</li><li>Renseignez le client, le type de moteur (monophasé, triphasé…), la plaque signalétique (puissance, tension, vitesse…) et la panne constatée.</li>
+<li>Validez : un numéro de dossier <b>OR-AAAA-NNNN</b> est attribué automatiquement.</li>
+<li>Les étapes de travail sont créées automatiquement selon le type de moteur.</li></ol>
+<h3>2.2 Suivre les étapes</h3>
+<p>Ouvrez un moteur depuis le tableau de bord. Les étapes standard sont :</p>
+<p>Diagnostic → Démontage → Débobinage → Nettoyage → Isolation → (étape spécifique monophasé/triphasé) → Bobinage → Connexions → Vernissage → Remontage → Test final.</p>
+<ul><li>Cochez chaque sous-étape terminée (ex. « Relever plaque », « Test Megger »).</li>
+<li>Quand toutes les sous-étapes d'une étape sont cochées, l'application propose <b>Demander la validation</b> à l'administrateur.</li>
+<li>Une étape validée est verrouillée : seul l'administrateur gère la suite.</li></ul>
+<h3>2.3 Envoyer un rapport</h3>
+<p>Dans la fiche du moteur, ajoutez un rapport : texte, mesures et <b>photos</b>. L'administrateur est notifié (pastille sur « Rapports »).</p>
+<h3>2.4 Mon profil</h3>
+<p>Modifier votre nom, votre mot de passe ou votre email (une confirmation est demandée).</p>
+
+<h2 class="pb">3. Administration</h2>
+<table><tr><th>Menu</th><th>Fonction</th></tr>
+<tr><td>Tableau de bord</td><td>Vue d'ensemble : moteurs en cours, validations en attente, activité récente.</td></tr>
+<tr><td>Moteurs</td><td>Tous les dossiers. Pastille = demandes de validation. Ouvrir un moteur pour valider ou corriger les étapes.</td></tr>
+<tr><td>Moteurs terminés</td><td>Archive des réparations achevées.</td></tr>
+<tr><td>Rapports</td><td>Rapports des techniciens (non lu / lu / approuvé).</td></tr>
+<tr><td>Clients</td><td>Fiches clients et historique (moteurs, devis, factures).</td></tr>
+<tr><td>Devis</td><td>Création, envoi, suivi (brouillon, envoyé, accepté, refusé, expiré).</td></tr>
+<tr><td>Factures</td><td>Émission, paiements, avoirs.</td></tr>
+<tr><td>Types de moteurs</td><td>Modèles de moteurs réutilisables.</td></tr>
+<tr><td>Pannes et diagnostics</td><td>Bibliothèque de pannes et diagnostics associés.</td></tr>
+<tr><td>Utilisateurs</td><td>Créer, approuver, désactiver les techniciens ; réinitialiser un mot de passe.</td></tr>
+<tr><td>Paramètres</td><td>Coordonnées de l'entreprise, NIF/STAT, logo, TVA, conditions.</td></tr></table>
+
+<h3>3.1 Valider une étape</h3>
+<ol><li>Cliquez sur la pastille de <b>Moteurs</b>.</li><li>Ouvrez le moteur, contrôlez l'étape et les photos.</li><li>Validez l'étape (ou renvoyez-la au technicien).</li></ol>
+<h3>3.2 Gérer les utilisateurs</h3>
+<ol><li><b>Utilisateurs → Ajouter</b> : nom, email, mot de passe initial, rôle.</li><li>Le technicien se connecte avec ces identifiants et peut changer son mot de passe.</li>
+<li>Pour retirer un accès : supprimez le profil dans l'application, puis le compte dans la console Firebase (Authentication).</li></ol>
+
+<h2 class="pb">4. Clients, devis et factures</h2>
+<h3>4.1 Créer un client</h3>
+<p><b>Clients → Nouveau</b> : nom, téléphone, adresse, NIF/STAT si c'est une société.</p>
+<h3>4.2 Établir un devis</h3>
+<ol><li><b>Devis → Nouveau</b>, choisissez le client.</li><li>Ajoutez des lignes (depuis le catalogue ou en saisie libre) : quantité, prix en Ariary.</li>
+<li>La TVA 20 % et le total sont calculés automatiquement.</li><li>Enregistrez, puis téléchargez le <b>PDF</b> pour l'envoyer au client.</li>
+<li>Passez le statut à <b>Accepté</b> ou <b>Refusé</b> selon la réponse.</li></ol>
+<h3>4.3 Facturer et encaisser</h3>
+<ol><li><b>Factures → Nouvelle</b> (ou depuis un devis accepté). Numéro automatique FA-AAAA-NNNN.</li>
+<li>Émettez la facture, puis enregistrez chaque <b>paiement</b> : espèces, virement, chèque, <b>MVola</b>, <b>Orange Money</b> ou <b>Airtel Money</b>.</li>
+<li>Le statut évolue : émise → partiellement payée → payée. Un avoir corrige une facture émise.</li>
+<li>Téléchargez le PDF de la facture.</li></ol>
+<div class="box">Les montants sont des entiers en Ariary (MGA). Une facture émise ne se modifie plus : utilisez un avoir.</div>
+
+<h2>5. Installation initiale (administrateur)</h2>
+<ol><li>Console Firebase → Authentication → activer <b>Email/Mot de passe</b>.</li>
+<li>Créer le premier administrateur (script <code>migrate-users.mjs --create-admin</code> ou à la main : utilisateur Auth + document <code>fortico_users/{UID}</code> avec <code>role="admin"</code>, <code>approved=true</code>).</li>
+<li>Déployer les règles : <code>firebase deploy --only firestore:rules,storage</code>.</li>
+<li>Renseigner <b>Paramètres</b> (raison sociale, NIF/STAT, logo, conditions) avant le premier devis.</li></ol>
+
+<h2>6. Conseils et dépannage</h2>
+<table><tr><th>Problème</th><th>Solution</th></tr>
+<tr><td>Impossible de se connecter</td><td>Vérifier email/mot de passe ; le compte doit exister dans Authentication et être approuvé.</td></tr>
+<tr><td>Déconnecté juste après connexion</td><td>Profil Firestore absent, rôle incorrect ou compte non approuvé.</td></tr>
+<tr><td>Photos non envoyées</td><td>Vérifier la connexion et la taille ; réessayer.</td></tr>
+<tr><td>Étape impossible à modifier</td><td>Elle est déjà validée : demander à l'administrateur.</td></tr></table>
+<ul><li>Utilisez un mot de passe solide et ne le partagez jamais.</li><li>Déconnectez-vous sur les appareils partagés.</li></ul>
+</body></html>
