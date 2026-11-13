@@ -14,6 +14,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
   type DocumentData,
   type QueryConstraint,
   type QuerySnapshot,
@@ -155,8 +156,30 @@ export async function setUserProfile(id: string, profile: New<User>) {
   return { id, ...data } as User;
 }
 export const updateUser = (id: string, updates: Partial<New<User>>) => patch(COLLECTIONS.USERS, id, updates);
-/** Supprime le profil : le compte Auth subsiste mais n'a plus accès à rien (à supprimer dans la console Firebase). */
-export const deleteUser = (id: string) => remove(COLLECTIONS.USERS, id);
+/**
+ * Supprime un technicien d'un coup : ses moteurs et rapports sont réaffectés à `newOwnerId` (l'admin)
+ * pour garder l'historique (le nom du technicien reste affiché), ses entrées de journal sont supprimées,
+ * puis son profil est effacé (il perd immédiatement tout accès). Son compte Firebase Auth devient inactif.
+ */
+export async function deleteUser(id: string, newOwnerId: string) {
+  const [motors, reports, activities] = await Promise.all([
+    list<Motor>(COLLECTIONS.MOTORS, where("userId", "==", id)),
+    list<Report>(COLLECTIONS.REPORTS, where("userId", "==", id)),
+    list<Activity>(COLLECTIONS.ACTIVITIES, where("userId", "==", id)),
+  ]);
+  const ops: ((b: ReturnType<typeof writeBatch>) => void)[] = [
+    ...motors.map((m) => (b: ReturnType<typeof writeBatch>) => b.update(doc(db, COLLECTIONS.MOTORS, m.id), { userId: newOwnerId, updatedAt: now() })),
+    ...reports.map((r) => (b: ReturnType<typeof writeBatch>) => b.update(doc(db, COLLECTIONS.REPORTS, r.id), { userId: newOwnerId, updatedAt: now() })),
+    ...activities.map((a) => (b: ReturnType<typeof writeBatch>) => b.delete(doc(db, COLLECTIONS.ACTIVITIES, a.id))),
+  ];
+  for (let i = 0; i < ops.length; i += 400) {
+    const batch = writeBatch(db);
+    ops.slice(i, i + 400).forEach((op) => op(batch));
+    await batch.commit();
+  }
+  await remove(COLLECTIONS.USERS, id); // en dernier : en cas d'échec, on peut relancer la suppression
+  return { motors: motors.length, reports: reports.length, activities: activities.length };
+}
 
 // === MOTEURS ===
 /** Admin : tous les moteurs. Technicien : uniquement les siens (exigé par les règles). */

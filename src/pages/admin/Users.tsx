@@ -167,12 +167,12 @@ export function Users({ admin }: { admin: SessionUser }) {
                     onClick={() =>
                       confirm({
                         title: "Supprimer",
-                        message: "Supprimer cet utilisateur ? Il perd immédiatement tout accès. Supprimez aussi son compte dans la console Firebase (Authentication) pour libérer l'email.",
+                        message: "Supprimer cet utilisateur ? Il perd immédiatement tout accès. Ses moteurs et rapports sont conservés et réaffectés à l'administrateur ; son journal d'activité est supprimé.",
                         icon: "trash",
                         confirmText: "Supprimer",
                         danger: true,
                         onConfirm: async () => {
-                          await deleteUser(u.id);
+                          await deleteUser(u.id, admin.id);
                           notify("Utilisateur supprimé", "success");
                           void reload();
                         },
